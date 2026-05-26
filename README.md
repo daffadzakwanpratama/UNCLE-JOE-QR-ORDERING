@@ -1,60 +1,58 @@
 # QR Ordering
 
-Project ini sekarang dipisah menjadi:
+Web-based QR ordering system for restaurant customers and admin management. Project ini memakai Node.js, Express, MySQL, serta frontend terpisah untuk pelanggan dan admin, tetapi tetap disajikan dari backend yang sama.
 
-- `frontend/user` untuk halaman pelanggan
-- `frontend/admin` untuk panel admin
-- `backend/src` untuk entry app, config, middleware, dan route API
-- `backend/scripts` untuk util CLI seperti hash password
-- `database` untuk struktur dan seed SQL
+## Fitur Utama
 
-Struktur backend yang sekarang:
+- Halaman pelanggan untuk melihat menu, menambah ke keranjang, checkout, dan memantau status order
+- Panel admin untuk login, mengelola kategori, menu, banner, diskon, dan laporan
+- REST API untuk alur publik dan admin
+- Upload gambar dengan mode penyimpanan yang bisa diatur
+- Health check dan readiness endpoint untuk kebutuhan monitoring
+- Cookie-based admin session dan rate limit pada login admin
+
+## Struktur Project
 
 ```text
+frontend/
+  user/        # halaman pelanggan
+  admin/       # panel admin
+  shared/      # asset shared frontend
 backend/
-  server.js
-  scripts/
-    hash-password.js
+  server.js    # entry point utama
+  scripts/     # util CLI dan test script
   src/
     app.js
-    server.js
     config/
-      db.js
     middlewares/
-      errorHandler.js
     routes/
-      index.js
-      publicRoutes.js
-      authRoutes.js
-      categoryRoutes.js
-      menuRoutes.js
-      orderRoutes.js
-      bannerRoutes.js
-      discountRoutes.js
-      reportRoutes.js
+    utils/
+database/
+  schema.sql
+  seeds.sql
+public/
+  uploads/     # upload lokal
 ```
 
-## Setup singkat
+## Menjalankan Project Secara Lokal
 
-1. Install dependency
+1. Install dependency.
 
 ```bash
 npm install
 ```
 
-2. Buat file `.env` dari `.env.example`
-
-3. Jalankan `database/schema.sql`
-
-4. Jalankan `database/seeds.sql`
-
-5. Start backend
+2. Buat file `.env` berdasarkan `.env.example`.
+3. Sesuaikan konfigurasi database pada `.env`.
+4. Import `database/schema.sql`.
+5. Import `database/seeds.sql`.
+6. Jalankan server development.
 
 ```bash
 npm run dev
 ```
 
-6. Buka aplikasi
+7. Buka aplikasi:
 
 ```text
 User  : http://localhost:4000/
@@ -62,14 +60,14 @@ Admin : http://localhost:4000/admin
 API   : http://localhost:4000/api
 ```
 
-## Script penting
+## Script Penting
 
 - `npm run dev` menjalankan backend dengan watch mode
-- `npm run start` menjalankan backend normal
+- `npm run start` menjalankan backend biasa
 - `npm run check:backend` memeriksa sintaks file backend
-- `npm run check:frontend` memeriksa sintaks file frontend user
-- `npm run test:smoke` mengecek health, auth dasar, dan endpoint publik/protected
-- `npm run test:api` mengecek login admin, validasi input, serta CRUD dasar kategori dan menu
+- `npm run check:frontend` memeriksa sintaks file frontend
+- `npm run test:smoke` menjalankan smoke test endpoint penting
+- `npm run test:api` menjalankan test API dasar untuk alur admin
 - `npm run hash:password -- <password>` membuat hash bcrypt untuk password admin
 
 Contoh:
@@ -78,56 +76,49 @@ Contoh:
 npm run hash:password -- admin123
 ```
 
-## Catatan
+## Environment Variable Penting
 
-- Backend sekarang juga menyajikan frontend user, frontend admin, dan asset shared dalam origin yang sama.
-- API default mengarah ke `http://localhost:4000/api`
-- Frontend admin dan user sekarang sama-sama dipisah ke layer `api`, `shared`, dan `pages`
+Beberapa konfigurasi yang paling sering dipakai:
 
-## Kesiapan Hosting Tahap 1
+- `PORT` untuk port backend, default `4000`
+- `FRONTEND_ORIGIN` untuk origin frontend yang diizinkan
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` untuk koneksi database
+- `JWT_SECRET` untuk token dan autentikasi admin
+- `TRUST_PROXY` untuk deployment di balik reverse proxy
+- `UPLOAD_STORAGE_MODE` dengan nilai `local` atau `external-url`
+- `MAX_UPLOAD_IMAGE_BYTES` untuk batas ukuran upload gambar
+- `ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS` dan `ADMIN_LOGIN_RATE_LIMIT_MAX_ATTEMPTS` untuk proteksi login admin
 
-- Untuk hosting production, set `NODE_ENV=production`.
-- Saat production, `FRONTEND_ORIGIN` wajib diisi domain frontend yang spesifik, misalnya `https://your-domain.com`.
-- Frontend sekarang akan otomatis memakai `${window.location.origin}/api` saat dijalankan lewat `http` atau `https`, jadi tidak lagi bergantung ke `localhost`.
-- Fallback `http://localhost:4000/api` hanya dipakai untuk pengembangan lokal seperti `file://`, `localhost`, atau `127.0.0.1`.
+## Catatan Arsitektur
 
-## Checklist Deploy Sederhana
+- Backend menyajikan frontend user, frontend admin, asset shared, dan API dari origin yang sama
+- Route root `/` akan mengarahkan ke `/user/pages/index.html`
+- Route `/admin` akan mengarahkan ke `/admin/pages/login.html`
+- API default berjalan di `/api`
+- Frontend akan memakai `${window.location.origin}/api` saat dijalankan dari host HTTP/HTTPS yang valid
 
-1. Siapkan `.env` production dengan nilai yang aman.
-2. Ganti `JWT_SECRET` dengan string acak yang panjang.
-3. Pastikan `FRONTEND_ORIGIN` sesuai domain final aplikasi.
-4. Import `database/schema.sql` dan `database/seeds.sql` ke database hosting.
-5. Jalankan backend dengan `npm run start`.
-6. Jika aplikasi ada di balik reverse proxy atau platform hosting, set `TRUST_PROXY=1`.
+## Endpoint Operasional
 
-## Proteksi Login Admin
+- `GET /api/live` untuk liveness check
+- `GET /api/ready` untuk readiness check database
+- `GET /api/health` untuk ringkasan status aplikasi dan database
 
-- Login admin sekarang dibatasi secara default maksimal `5` percobaan gagal per `15 menit` untuk kombinasi IP dan username.
-- Nilai ini bisa diatur lewat:
-  - `ADMIN_LOGIN_RATE_LIMIT_WINDOW_MS`
-  - `ADMIN_LOGIN_RATE_LIMIT_MAX_ATTEMPTS`
-- Sesi admin sekarang mengandalkan cookie `httpOnly` dari server. Frontend tidak lagi menyimpan token admin sensitif di `localStorage`.
-- Untuk production, cookie admin bisa diatur lewat:
-  - `ADMIN_COOKIE_DOMAIN`
-  - `ADMIN_COOKIE_SAME_SITE`
-  - `ADMIN_COOKIE_SECURE`
+## Catatan Deploy
 
-## Upload Gambar
+- Set `NODE_ENV=production` saat production
+- Ganti `JWT_SECRET` dengan nilai acak yang panjang dan aman
+- Pastikan `FRONTEND_ORIGIN` sesuai domain final aplikasi
+- Jika berada di balik reverse proxy atau platform hosting, set `TRUST_PROXY=1`
+- Saat production, tentukan `UPLOAD_STORAGE_MODE` secara eksplisit
+- Untuk storage sementara pada hosting, pertimbangkan `external-url` atau object storage
 
-- Upload gambar lokal sekarang dibatasi hanya untuk MIME gambar yang dikenal.
-- Ukuran maksimum default adalah `2MB` dan bisa diatur lewat `MAX_UPLOAD_IMAGE_BYTES`.
-- Mode storage sekarang eksplisit lewat `UPLOAD_STORAGE_MODE`:
-  - `local` untuk menyimpan file ke `public/uploads`
-  - `external-url` untuk hanya menerima URL gambar eksternal
-- Saat `NODE_ENV=production`, `UPLOAD_STORAGE_MODE` wajib diisi agar strategi storage tidak ambigu.
-- Untuk hosting dengan storage sementara, jangka panjang sebaiknya gunakan `external-url` atau pindahkan ke object storage.
+## Keamanan dan Operasional
 
-## Monitoring dan Operasional
+- Login admin dibatasi default `5` percobaan gagal per `15 menit`
+- Session admin memakai cookie `httpOnly`, bukan `localStorage`
+- Upload gambar dibatasi ke MIME gambar yang dikenal
+- Logging request bisa diatur lewat `ENABLE_REQUEST_LOGS` dan `LOG_HEALTHCHECK_REQUESTS`
 
-- Endpoint operasional yang tersedia:
-  - `GET /api/live` untuk liveness check ringan
-  - `GET /api/ready` untuk readiness check yang memastikan database siap
-  - `GET /api/health` untuk ringkasan status aplikasi dan database
-- Logging request bisa diatur lewat:
-  - `ENABLE_REQUEST_LOGS=true|false`
-  - `LOG_HEALTHCHECK_REQUESTS=true|false`
+## Lisensi
+
+Belum ada lisensi yang ditetapkan untuk repository ini.
