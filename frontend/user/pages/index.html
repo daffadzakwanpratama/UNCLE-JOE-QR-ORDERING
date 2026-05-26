@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Ordering | Home</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-row">
+        <div class="brand-mark brand-mark-logo" aria-hidden="true">
+          <img src="../assets/img/logo.png" alt="">
+        </div>
+        <div class="brand-copy">
+          <strong>Uncle Jo</strong>
+        </div>
+      </div>
+      <a class="status-button" href="./status.html" aria-label="Lihat status pesanan" id="statusButton">
+        <span class="status-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 4h12v16l-6-3-6 3V4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M9 9h6M9 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="status-copy">
+          <strong>Status</strong>
+          <strong>Pesanan</strong>
+        </span>
+      </a>
+    </header>
+
+    <main class="page-content">
+      <section class="search-block">
+        <a class="search-bar" href="./all-menu.html" aria-label="Buka halaman cari minuman">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/>
+            <path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="search-link-text">Cari minuman...</span>
+        </a>
+      </section>
+
+      <section class="hero-section">
+        <div class="hero-viewport" id="heroViewport">
+          <div class="hero-track" id="heroTrack"></div>
+        </div>
+        <div class="hero-dots" id="heroDots" aria-label="Indikator promo"></div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <h2>Menu Populer</h2>
+          <a href="./all-menu.html">Lihat Semua</a>
+        </div>
+        <div class="popular-grid" id="popularList"></div>
+      </section>
+
+      <section class="content-section recommendation-section">
+        <div class="section-heading">
+          <h2>Rekomendasi untuk Kamu</h2>
+        </div>
+        <div class="recommendation-list" id="recommendationList"></div>
+      </section>
+    </main>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+    <nav class="bottom-nav" aria-label="Navigasi utama">
+      <a class="bottom-link is-active" href="./index.html">
+        <span class="bottom-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>Home</span>
+      </a>
+      <a class="bottom-link" href="./all-menu.html">
+        <span class="bottom-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/>
+            <path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Cari</span>
+      </a>
+      <a class="bottom-link" href="./cart.html">
+        <span class="bottom-icon with-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 7h13l-1.5 9h-10L7 7Zm0 0-.5-3H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10" cy="20" r="1" fill="currentColor"/>
+            <circle cx="17" cy="20" r="1" fill="currentColor"/>
+          </svg>
+          <span class="badge-count is-empty">0</span>
+        </span>
+        <span>Keranjang</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../../shared/assets/js/api/base-client.js"></script>
+  <script src="../assets/js/api/client.js"></script>
+  <script src="../assets/js/api/storefront.js"></script>
+  <script src="../assets/js/shared/data.js"></script>
+  <script src="../assets/js/shared/helper.js"></script>
+  <script src="../assets/js/pages/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Laporan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="report">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <!-- Premium Revenue Trend Chart Panel -->
+            <section class="admin-panel is-panel-tinted admin-chart-panel">
+                <div class="admin-panel-head">
+                    <div class="admin-panel-heading">
+                        <h2>Tren Penjualan</h2>
+                        <p>Visualisasi tren pemasukan kasir harian untuk bulan yang dipilih.</p>
+                    </div>
+                </div>
+                <div class="admin-chart-wrapper">
+                    <div id="revenueChart"></div>
+                </div>
+            </section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <div class="admin-report-toolbar">
+                    <label class="admin-field admin-report-filter">
+                        <span>Periode Bulan</span>
+                        <select id="reportMonthFilter" aria-label="Filter laporan per bulan"></select>
+                    </label>
+
+                    <button type="button" class="admin-primary-button" id="reportExportButton">
+                        Export Spreadsheet
+                    </button>
+                </div>
+
+                <div class="admin-report-period-card" id="reportPeriodCard"></div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Tanggal</th>
+                                <th>Pelanggan</th>
+                                <th>Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="admin-modal-backdrop is-hidden" id="reportDetailModal" aria-hidden="true">
+        <div class="admin-modal admin-report-modal" role="dialog" aria-modal="true" aria-labelledby="reportDetailTitle">
+            <div class="admin-modal-head">
+                <div>
+                    <h2 id="reportDetailTitle">Detail Transaksi</h2>
+                    <p id="reportDetailSubtitle">Lihat rincian transaksi yang dipilih.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="reportDetailCloseButton" aria-label="Tutup detail transaksi">x</button>
+            </div>
+
+            <div class="admin-report-detail-grid" id="reportDetailGrid"></div>
+            <div class="admin-report-detail-section">
+                <span>Item Pesanan</span>
+                <ul class="admin-report-detail-items" id="reportDetailItems"></ul>
+            </div>
+            <div class="admin-report-detail-note" id="reportDetailNote"></div>
+        </div>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/report.js"></script>
+</body>
+</html>
+

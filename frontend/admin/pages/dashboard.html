@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="dashboard">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+                <div class="admin-list admin-transaction-card-list" id="dashboardTransactionList"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/dashboard.js"></script>
+
+</body>
+</html>
+

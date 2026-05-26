@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Banner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="banner">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <div class="admin-toolbar">
+                    <label class="admin-inline-field" for="bannerStatusFilter">
+                        <span>Filter status</span>
+                        <select id="bannerStatusFilter">
+                            <option value="all">Semua banner</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Nonaktif</option>
+                            <option value="scheduled">Terjadwal</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Preview</th>
+                                <th>Judul Banner</th>
+                                <th>Subtitle</th>
+                                <th>Periode</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bannerTableBody">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="admin-empty-state">
+                                        <strong>Belum ada banner</strong>
+                                        <p>Struktur halaman siap. Nanti data banner CRUD akan muncul di sini.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="admin-modal-backdrop is-hidden" id="bannerModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2 id="bannerModalTitle">Tambah Banner</h2>
+                    <p>Isi informasi banner promo atau pengumuman yang ingin ditampilkan ke user.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeBannerModal" aria-label="Tutup modal">x</button>
+            </div>
+
+            <form id="bannerForm" class="admin-form admin-banner-form" novalidate>
+                <input type="hidden" id="bannerId">
+
+                <label class="admin-field admin-field-span-2">
+                    <span>Judul Banner</span>
+                    <input type="text" id="bannerTitle" name="bannerTitle" placeholder="Contoh: Gratis Delivery" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Subtitle</span>
+                    <textarea id="bannerSubtitle" name="bannerSubtitle" rows="2" placeholder="Contoh: Min. pembelian Rp 50.000"></textarea>
+                </label>
+
+                <label class="admin-field">
+                    <span>Link Tujuan</span>
+                    <input type="text" id="bannerLink" name="bannerLink" placeholder="Contoh: ./all-menu.html">
+                </label>
+
+                <label class="admin-field">
+                    <span>Gambar Banner</span>
+                    <input type="file" id="bannerImage" name="bannerImage" accept="image/*">
+                </label>
+
+                <div class="admin-image-preview-wrap admin-banner-preview-wrap">
+                    <img id="bannerImagePreview" class="admin-image-preview" alt="Preview gambar banner">
+                </div>
+
+                <label class="admin-field">
+                    <span>Tanggal Mulai</span>
+                    <input type="date" id="bannerStartDate" name="bannerStartDate">
+                </label>
+
+                <label class="admin-field">
+                    <span>Tanggal Berakhir</span>
+                    <input type="date" id="bannerEndDate" name="bannerEndDate">
+                </label>
+
+                <label class="admin-field">
+                    <span>Urutan Tampil</span>
+                    <input type="number" id="bannerSortOrder" name="bannerSortOrder" min="1" placeholder="Contoh: 1">
+                </label>
+
+                <label class="admin-field admin-checkbox-field admin-banner-toggle">
+                    <input type="checkbox" id="bannerActive" name="bannerActive" checked>
+                    <span>Banner aktif ditampilkan</span>
+                </label>
+
+                <p class="admin-form-error admin-field-span-2" id="bannerFormError"></p>
+
+                <div class="admin-form-actions admin-field-span-2">
+                    <button type="button" class="admin-secondary-button" id="cancelBannerButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/banner.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Login</title>
+    <meta name="description" content="Login admin untuk mengelola menu, kategori, dan laporan QR ordering.">
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-login-body">
+    <main class="admin-login-shell">
+        <!-- Branding Section (Logo & Portal Name) -->
+        <div class="admin-login-brand">
+            <div class="admin-login-logo-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="admin-login-logo-icon">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                    <line x1="6" y1="1" x2="6" y2="4"></line>
+                    <line x1="10" y1="1" x2="10" y2="4"></line>
+                    <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>
+            </div>
+            <h1 class="admin-login-brand-title">Uncle Joe</h1>
+            <p class="admin-login-brand-subtitle">Café Admin Portal</p>
+        </div>
+
+        <!-- Login Card -->
+        <section class="admin-login-card">
+            <div class="admin-login-card-head">
+                <h2>Admin Login</h2>
+                <p>Enter your credentials to continue</p>
+            </div>
+
+            <form id="loginForm" class="admin-form" novalidate>
+                <div class="admin-login-field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
+                </div>
+
+                <div class="admin-login-field">
+                    <label for="password">Password</label>
+                    <div class="admin-login-password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required>
+                        <button type="button" class="admin-login-password-toggle" id="passwordToggle" aria-label="Tampilkan password">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const passwordInput = document.getElementById('password');
+                        const toggleButton = document.getElementById('passwordToggle');
+                        if (passwordInput && toggleButton) {
+                            const eyeIcon = toggleButton.querySelector('.eye-icon');
+                            const eyeOffIcon = toggleButton.querySelector('.eye-off-icon');
+                            
+                            toggleButton.addEventListener('click', () => {
+                                if (passwordInput.type === 'password') {
+                                    passwordInput.type = 'text';
+                                    eyeIcon.style.display = 'none';
+                                    eyeOffIcon.style.display = 'block';
+                                } else {
+                                    passwordInput.type = 'password';
+                                    eyeIcon.style.display = 'block';
+                                    eyeOffIcon.style.display = 'none';
+                                }
+                            });
+                        }
+                    });
+                </script>
+
+                <div class="admin-login-row">
+                    <label class="admin-login-remember">
+                        <input type="checkbox" id="remember" name="remember">
+                        <span class="custom-checkbox"></span>
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="admin-login-forgot" onclick="event.preventDefault(); alert('Hubungi administrator utama untuk reset password.');">Forgot password?</a>
+                </div>
+
+                <p class="admin-form-error" id="loginFormError"></p>
+
+                <div class="admin-login-actions">
+                    <button type="submit" class="admin-primary-button admin-login-button" id="loginSubmitButton">Sign In</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Security Footer -->
+        <footer class="admin-login-footer">
+            Protected by enterprise-grade security
+        </footer>
+    </main>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/login.js"></script>
+</body>
+</html>
+
+

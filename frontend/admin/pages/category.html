@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Kategori</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="category">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Kategori</th>
+                                <th>Deskripsi</th>
+                                <th>Jumlah Menu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="admin-modal-backdrop is-hidden" id="categoryModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2 id="categoryModalTitle">Tambah Kategori</h2>
+                    <p>Isi data kategori dengan singkat dan jelas.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeCategoryModal" aria-label="Tutup modal">x</button>
+            </div>
+
+            <form id="categoryForm" class="admin-form" novalidate>
+                <input type="hidden" id="categoryId">
+
+                <label class="admin-field">
+                    <span>Nama Kategori</span>
+                    <input type="text" id="categoryName" name="categoryName" placeholder="Contoh: Coffee" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Deskripsi</span>
+                    <textarea id="categoryDescription" name="categoryDescription" rows="4" placeholder="Deskripsi singkat kategori"></textarea>
+                </label>
+
+                <p class="admin-form-error" id="categoryFormError"></p>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-secondary-button" id="cancelCategoryButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/category.js"></script>
+</body>
+</html>
+

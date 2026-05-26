@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Diskon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="discount">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <div class="admin-toolbar">
+                    <label class="admin-inline-field" for="discountTypeFilter">
+                        <span>Filter tipe</span>
+                        <select id="discountTypeFilter">
+                            <option value="all">Semua tipe</option>
+                            <option value="voucher">Voucher</option>
+                            <option value="referral">Referral</option>
+                        </select>
+                    </label>
+
+                    <label class="admin-inline-field" for="discountStatusFilter">
+                        <span>Filter status</span>
+                        <select id="discountStatusFilter">
+                            <option value="all">Semua status</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Nonaktif</option>
+                            <option value="expired">Kedaluwarsa</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Promo</th>
+                                <th>Tipe</th>
+                                <th>Diskon</th>
+                                <th>Periode</th>
+                                <th>Pemakaian</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="discountTableBody">
+                            <tr>
+                                <td colspan="8">
+                                    <div class="admin-empty-state">
+                                        <strong>Belum ada kode promo</strong>
+                                        <p>Struktur halaman siap. Nanti data voucher dan referral akan dikelola dari sini.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="admin-modal-backdrop is-hidden" id="discountModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2 id="discountModalTitle">Tambah Kode Diskon</h2>
+                    <p>Isi detail voucher atau referral code agar user bisa mendapatkan potongan harga.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeDiscountModal" aria-label="Tutup modal">x</button>
+            </div>
+
+            <form id="discountForm" class="admin-form admin-discount-form" novalidate>
+                <input type="hidden" id="discountId">
+
+                <label class="admin-field">
+                    <span>Nama Promo</span>
+                    <input type="text" id="discountName" name="discountName" placeholder="Contoh: Promo Hemat 10%" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Kode Promo</span>
+                    <input type="text" id="discountCode" name="discountCode" placeholder="Contoh: HEMAT10" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Tipe Kode</span>
+                    <select id="discountType" name="discountType" required>
+                        <option value="voucher">Voucher</option>
+                        <option value="referral">Referral</option>
+                    </select>
+                </label>
+
+                <label class="admin-field">
+                    <span>Jenis Diskon</span>
+                    <select id="discountValueType" name="discountValueType" required>
+                        <option value="percent">Persentase (%)</option>
+                        <option value="fixed">Nominal Tetap (Rp)</option>
+                    </select>
+                </label>
+
+                <label class="admin-field">
+                    <span>Nilai Diskon</span>
+                    <input type="number" id="discountValue" name="discountValue" min="0" placeholder="Contoh: 10 atau 12000" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Minimum Pembelian</span>
+                    <input type="number" id="discountMinPurchase" name="discountMinPurchase" min="0" placeholder="Contoh: 50000">
+                </label>
+
+                <label class="admin-field">
+                    <span>Maksimum Potongan</span>
+                    <input type="number" id="discountMaxDiscount" name="discountMaxDiscount" min="0" placeholder="Contoh: 15000">
+                </label>
+
+                <label class="admin-field">
+                    <span>Batas Penggunaan</span>
+                    <input type="number" id="discountUsageLimit" name="discountUsageLimit" min="1" placeholder="Contoh: 100">
+                </label>
+
+                <label class="admin-field">
+                    <span>Tanggal Mulai</span>
+                    <input type="date" id="discountStartDate" name="discountStartDate">
+                </label>
+
+                <label class="admin-field">
+                    <span>Tanggal Berakhir</span>
+                    <input type="date" id="discountEndDate" name="discountEndDate">
+                </label>
+
+                <label class="admin-field admin-field-span-2">
+                    <span>Deskripsi</span>
+                    <textarea id="discountDescription" name="discountDescription" rows="3" placeholder="Jelaskan aturan atau tujuan promo ini"></textarea>
+                </label>
+
+                <label class="admin-field admin-checkbox-field admin-field-span-2">
+                    <input type="checkbox" id="discountActive" name="discountActive" checked>
+                    <span>Kode promo aktif digunakan</span>
+                </label>
+
+                <p class="admin-form-error admin-field-span-2" id="discountFormError"></p>
+
+                <div class="admin-form-actions admin-field-span-2">
+                    <button type="button" class="admin-secondary-button" id="cancelDiscountButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/discount.js"></script>
+</body>
+</html>
+

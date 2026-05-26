@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Menu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="menu">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-summary-grid" data-admin-summary></section>
+
+            <section class="admin-panel is-panel-tinted">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <div class="admin-toolbar">
+                    <label class="admin-inline-field" for="menuCategoryFilter">
+                        <span>Filter kategori</span>
+                        <select id="menuCategoryFilter"></select>
+                    </label>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Gambar</th>
+                                <th>Nama Menu</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="admin-modal-backdrop is-hidden" id="menuModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2 id="menuModalTitle">Tambah Menu</h2>
+                    <p>Isi data menu sesuai kategori yang tersedia.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeMenuModal" aria-label="Tutup modal">x</button>
+            </div>
+
+            <form id="menuForm" class="admin-form" novalidate>
+                <input type="hidden" id="menuId">
+
+                <label class="admin-field">
+                    <span>Nama Menu</span>
+                    <input type="text" id="menuName" name="menuName" placeholder="Contoh: Cappuccino" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Kategori</span>
+                    <select id="menuCategory" name="menuCategory" required></select>
+                </label>
+
+                <label class="admin-field">
+                    <span>Harga</span>
+                    <input type="number" id="menuPrice" name="menuPrice" placeholder="Contoh: 25000" min="0" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Gambar Menu</span>
+                    <input type="file" id="menuImage" name="menuImage" accept="image/*">
+                </label>
+
+                <div class="admin-image-preview-wrap">
+                    <img id="menuImagePreview" class="admin-image-preview" alt="Preview gambar menu">
+                </div>
+
+                <label class="admin-field admin-checkbox-field">
+                    <input type="checkbox" id="menuAvailable" name="menuAvailable" checked>
+                    <span>Menu tersedia</span>
+                </label>
+
+                <p class="admin-form-error" id="menuFormError"></p>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-secondary-button" id="cancelMenuButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/menu.js"></script>
+</body>
+</html>
+
