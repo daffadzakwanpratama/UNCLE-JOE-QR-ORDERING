@@ -181,52 +181,15 @@ function createPopularCard(item) {
   `;
 }
 
-function createRecommendationCard(item) {
-  const itemId = encodeURIComponent(item.id);
-  const itemImage = escapeAttribute(item.image);
-  const itemName = escapeHTML(item.name);
-  const showRating = shouldShowProductRating(item);
-
-  return `
-    <article class="recommendation-card">
-      <div class="recommendation-thumb">
-        <img src="${itemImage}" alt="${itemName}">
-      </div>
-      <div class="recommendation-copy">
-        <h3>${itemName}</h3>
-        ${showRating ? `
-          <div class="rating-row">
-            <span class="rating-star">&#9733;</span>
-            <strong>${item.rating}</strong>
-            <span>(${item.reviews})</span>
-          </div>
-        ` : ""}
-        <span class="price-current is-dark">${formatRupiah(item.price)}</span>
-      </div>
-      <div class="recommendation-action">
-        <a class="order-button" href="./menu.html?id=${itemId}">Pesan</a>
-      </div>
-    </article>
-  `;
-}
-
 function renderMenu() {
   const popularList = document.getElementById("popularList");
-  const recommendationList = document.getElementById("recommendationList");
   const popularItems = [...menuItems]
-    .sort((left, right) => (right.popularity || 0) - (left.popularity || 0))
-    .slice(0, 3);
-  const recommendationItems = [...menuItems]
-    .sort((left, right) => (right.rating || 0) - (left.rating || 0) || (right.reviews || 0) - (left.reviews || 0))
-    .slice(0, 4);
+    .filter((item) => item.isPopular)
+    .slice(0, 6);
 
   popularList.innerHTML = popularItems.length
     ? popularItems.map(createPopularCard).join("")
     : `<article class="recommendation-card"><div class="recommendation-copy"><h3>Menu belum ditemukan</h3><div class="rating-row"><span>Coba kata kunci atau kategori lain.</span></div></div></article>`;
-
-  recommendationList.innerHTML = recommendationItems.length
-    ? recommendationItems.map(createRecommendationCard).join("")
-    : "";
 }
 
 function bindStatusButton() {
@@ -257,6 +220,7 @@ function mapApiMenuItem(item) {
     badge: Boolean(Number(item.available) || item.available) ? "" : "Habis",
     promo: "",
     popularity: Number(item.popularityScore || 0),
+    isPopular: Boolean(Number(item.isPopular) || item.isPopular),
     description: item.description || "",
     image: item.imageUrl || "",
   };

@@ -70,6 +70,17 @@ const ADMIN_ICONS = {
             <path fill="currentColor" stroke="none" d="M12 2A10 10 0 1 0 22 12 10 10 0 0 0 12 2ZM8.5 6.5a2 2 0 1 1-2 2A2 2 0 0 1 8.5 6.5Zm.21 10.21A1 1 0 1 1 7.29 15.3l8-8a1 1 0 0 1 1.42 1.4ZM15.5 17.5a2 2 0 1 1 2-2A2 2 0 0 1 15.5 17.5Z"></path>
         </svg>
     `.trim(),
+    qr: `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 4h6v6H4z"></path>
+            <path d="M14 4h6v6h-6z"></path>
+            <path d="M4 14h6v6H4z"></path>
+            <path d="M14 14h2v2h-2z"></path>
+            <path d="M18 14h2v2h-2z"></path>
+            <path d="M14 18h2v2h-2z"></path>
+            <path d="M17 17h3v3h-3z"></path>
+        </svg>
+    `.trim(),
 };
 
 const ADMIN_NAV_ITEMS = [

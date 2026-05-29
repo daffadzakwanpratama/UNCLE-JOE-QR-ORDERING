@@ -25,6 +25,7 @@ router.get("/", asyncHandler(async (request, response) => {
         m.rating,
         m.reviews_count AS reviewsCount,
         m.popularity_score AS popularityScore,
+        m.is_popular AS isPopular,
         c.id AS categoryId,
         c.name AS categoryName
      FROM menus m
@@ -46,12 +47,14 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
     price = 0,
     imageUrl = "",
     available = true,
+    isPopular = false,
   } = request.body || {};
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
   const normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
   const normalizedAvailable = normalizeBoolean(available);
+  const normalizedIsPopular = normalizeBoolean(isPopular);
 
   const storedImageUrl = saveImageValue(imageUrl, "menus");
 
@@ -62,8 +65,9 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
         description,
         price,
         image_url,
-        available
-     ) VALUES (?, ?, ?, ?, ?, ?)`,
+        available,
+        is_popular
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       normalizedCategoryId,
       normalizedName,
@@ -71,6 +75,7 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
       normalizedPrice,
       storedImageUrl,
       normalizedAvailable ? 1 : 0,
+      normalizedIsPopular ? 1 : 0,
     ]
   );
 
@@ -91,12 +96,14 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
     price = 0,
     imageUrl = "",
     available = true,
+    isPopular = false,
   } = request.body || {};
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
   const normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
   const normalizedAvailable = normalizeBoolean(available);
+  const normalizedIsPopular = normalizeBoolean(isPopular);
 
   const existingMenus = await query(
     `SELECT id, image_url AS imageUrl
@@ -129,7 +136,8 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
         description = ?,
         price = ?,
         image_url = ?,
-        available = ?
+        available = ?,
+        is_popular = ?
     WHERE id = ?`,
     [
       normalizedCategoryId,
@@ -138,6 +146,7 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
       normalizedPrice,
       storedImageUrl,
       normalizedAvailable ? 1 : 0,
+      normalizedIsPopular ? 1 : 0,
       menuId,
     ]
   );

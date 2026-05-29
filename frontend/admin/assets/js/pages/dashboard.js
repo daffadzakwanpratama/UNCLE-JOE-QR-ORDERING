@@ -117,6 +117,7 @@ function renderTransactionList(container, orders) {
     container.innerHTML = visibleOrders.map((transaction) => {
         const transactionNote = buildTransactionNote(transaction);
         const hasNote = transactionNote !== '-' && transactionNote.trim() !== 'Tidak ada catatan tambahan.';
+        const transactionItemsMarkup = renderTransactionItems(transaction);
 
         return `
             <article class="admin-transaction-card">
@@ -142,7 +143,7 @@ function renderTransactionList(container, orders) {
                 </div>
                 <div class="admin-transaction-items">
                     <span>Items</span>
-                    <p>Lihat detail di laporan atau endpoint order detail.</p>
+                    ${transactionItemsMarkup}
                 </div>
                 <div class="admin-transaction-note ${hasNote ? 'has-active-note' : ''}">
                     <strong>${hasNote ? '⚠ PENTING (Catatan):' : 'Catatan:'}</strong> ${escapeHtml(transactionNote)}
@@ -204,14 +205,45 @@ function getTransactionBadgeClass(status) {
 
 function formatTransactionDateTime(transaction) {
     if (transaction.createdAt) {
-        return transaction.createdAt;
+        const createdAt = new Date(transaction.createdAt);
+        if (!Number.isNaN(createdAt.getTime())) {
+            const formattedTime = new Intl.DateTimeFormat('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+            }).format(createdAt);
+            const formattedDate = new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+            }).format(createdAt);
+
+            return `${formattedTime} | ${formattedDate}`;
+        }
     }
 
     if (transaction.time && transaction.time !== '-') {
-        return `${transaction.date} ${transaction.time}`;
+        const formattedDate = formatTransactionDateLabel(transaction.date);
+        return `${transaction.time} | ${formattedDate}`;
     }
 
-    return transaction.date || '-';
+    return formatTransactionDateLabel(transaction.date);
+}
+
+function formatTransactionDateLabel(dateValue) {
+    if (!dateValue || dateValue === '-') {
+        return '-';
+    }
+
+    const date = new Date(`${dateValue}T00:00`);
+    if (Number.isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+    return new Intl.DateTimeFormat('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    }).format(date);
 }
 
 function buildTransactionNote(transaction) {
@@ -221,6 +253,51 @@ function buildTransactionNote(transaction) {
     ].filter((value) => String(value || '').trim());
 
     return notes.length ? notes.join(' | ') : '-';
+}
+
+function renderTransactionItems(transaction) {
+    const items = getTransactionItems(transaction);
+    if (!items.length) {
+        return '<p>Item pesanan belum tersedia.</p>';
+    }
+
+    return `
+        <ul>
+            ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+        </ul>
+    `;
+}
+
+function getTransactionItems(transaction) {
+    if (Array.isArray(transaction?.items) && transaction.items.length) {
+        return transaction.items
+            .map((item) => {
+                if (typeof item === 'string') {
+                    return item.trim();
+                }
+
+                const qty = Number(item?.qty || 0);
+                const name = String(item?.menuName || item?.name || '').trim();
+                const sizeLabel = String(item?.sizeLabel || '').trim();
+                if (!name) {
+                    return '';
+                }
+
+                const qtyLabel = qty > 0 ? `${qty}x ` : '';
+                const sizeSuffix = sizeLabel ? ` (${sizeLabel})` : '';
+                return `${qtyLabel}${name}${sizeSuffix}`;
+            })
+            .filter(Boolean);
+    }
+
+    if (typeof transaction?.itemSummary === 'string' && transaction.itemSummary.trim()) {
+        return transaction.itemSummary
+            .split('|')
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return [];
 }
 
 function renderTransactionActions(transaction) {

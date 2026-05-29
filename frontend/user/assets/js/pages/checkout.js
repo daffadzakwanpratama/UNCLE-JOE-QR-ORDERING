@@ -5,7 +5,7 @@ const paymentMethods = [
 
 const checkoutState = {
   paymentMethod: "",
-  tableNumber: "",
+  tableNumber: getActiveTableNumber(),
   customerName: "",
   phoneNumber: "",
   baristaNote: "",
@@ -26,10 +26,6 @@ function showCheckoutToast(message) {
     title: "Form belum lengkap",
     message,
   });
-}
-
-function buildOrderNumber() {
-  return `UJ-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 }
 
 function getCurrentTimeLabel() {
@@ -80,6 +76,7 @@ function renderCheckoutPage() {
       <div class="checkout-field">
         <label for="tableNumber">Nomor Meja / Kursi</label>
         <input id="tableNumber" type="text" placeholder="Contoh: A12" value="${escapeAttribute(checkoutState.tableNumber)}">
+        ${checkoutState.tableNumber ? `<small class="checkout-table-hint">Nomor meja terdeteksi dari QR meja dan masih bisa kamu ubah bila perlu.</small>` : ""}
       </div>
 
       <div class="checkout-field">
@@ -156,6 +153,7 @@ function renderCheckoutPage() {
 function bindCheckoutActions(items, totals) {
   document.getElementById("tableNumber")?.addEventListener("input", (event) => {
     checkoutState.tableNumber = event.target.value;
+    saveActiveTableNumber(event.target.value);
     updateCheckoutButtonState();
   });
 
@@ -211,7 +209,7 @@ function bindCheckoutActions(items, totals) {
     }
 
     const order = {
-      orderNumber: buildOrderNumber(),
+      orderNumber: "",
       orderTime: getCurrentTimeLabel(),
       estimate: "10 menit",
       currentStep: "brewing",
@@ -242,7 +240,6 @@ function bindCheckoutActions(items, totals) {
     };
 
     const apiOrderPayload = {
-      orderNumber: order.orderNumber,
       customerName: order.meta.customerName,
       phoneNumber: order.meta.phoneNumber,
       tableNumber: order.meta.tableNumber,
@@ -281,7 +278,13 @@ function bindCheckoutActions(items, totals) {
         order.meta.total = Number(serverTotals.total || 0);
       }
 
+      order.orderNumber = createdOrder?.orderNumber || "";
+      if (!order.orderNumber) {
+        throw new Error("Server belum mengembalikan kode pesanan.");
+      }
+
       saveActiveOrder(order);
+      saveActiveTableNumber(order.meta.tableNumber);
       clearCartItems();
       clearActivePromoCode();
       window.location.href = "./status.html";

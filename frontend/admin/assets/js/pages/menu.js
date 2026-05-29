@@ -17,6 +17,7 @@ class MenuPage {
         this.menuImageInput = document.getElementById('menuImage');
         this.menuImagePreview = document.getElementById('menuImagePreview');
         this.menuAvailableInput = document.getElementById('menuAvailable');
+        this.menuPopularInput = document.getElementById('menuPopular');
         this.menus = [];
         this.categories = [];
         this.currentImageData = '';
@@ -75,6 +76,15 @@ class MenuPage {
                 this.deleteMenu(menuId);
             }
         });
+
+        this.tableBody?.addEventListener('change', (event) => {
+            const popularSwitch = event.target.closest('.popular-switch');
+            if (!popularSwitch) return;
+
+            const menuId = Number(popularSwitch.dataset.id);
+            const isPopular = popularSwitch.checked;
+            this.togglePopularity(menuId, isPopular);
+        });
     }
 
     render() {
@@ -121,7 +131,7 @@ class MenuPage {
         if (!filteredMenus.length) {
             this.tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="admin-empty-state">
                             <strong>Belum ada menu</strong>
                             <p>Tambahkan menu baru atau ubah filter kategori.</p>
@@ -138,6 +148,7 @@ class MenuPage {
             const availabilityClass = isAvailable ? 'is-success' : 'is-muted';
             const availabilityLabel = isAvailable ? 'Tersedia' : 'Habis';
             const toggleLabel = isAvailable ? 'Tandai Habis' : 'Tandai Tersedia';
+            const isPopular = Boolean(Number(menu.isPopular) || menu.isPopular);
 
             return `
                 <tr>
@@ -146,6 +157,12 @@ class MenuPage {
                     <td>${this.escapeHtml(categoryName)}</td>
                     <td>${AdminStore.formatAdminCurrency(Number(menu.price || 0))}</td>
                     <td><span class="admin-status-badge ${availabilityClass}">${availabilityLabel}</span></td>
+                    <td>
+                        <label class="admin-switch">
+                            <input type="checkbox" class="popular-switch" data-id="${menu.id}" ${isPopular ? 'checked' : ''}>
+                            <span class="admin-slider"></span>
+                        </label>
+                    </td>
                     <td>
                         <div class="admin-action-group">
                             <button type="button" class="admin-table-button" data-action="edit" data-id="${menu.id}">Edit</button>
@@ -181,6 +198,7 @@ class MenuPage {
             this.menuCategoryInput.value = String(menu.categoryId);
             this.menuPriceInput.value = String(Number(menu.price || 0));
             this.menuAvailableInput.checked = Boolean(Number(menu.available) || menu.available);
+            this.menuPopularInput.checked = Boolean(Number(menu.isPopular) || menu.isPopular);
             this.currentImageData = menu.imageUrl || menu.image || '';
         } else {
             this.modalTitle.textContent = 'Tambah Menu';
@@ -188,6 +206,7 @@ class MenuPage {
                 this.menuCategoryInput.value = this.menuCategoryInput.options[0].value;
             }
             this.menuAvailableInput.checked = true;
+            this.menuPopularInput.checked = false;
             this.currentImageData = '';
         }
 
@@ -208,6 +227,7 @@ class MenuPage {
         const categoryId = Number(this.menuCategoryInput.value);
         const price = Number(this.menuPriceInput.value);
         const available = this.menuAvailableInput.checked;
+        const isPopular = this.menuPopularInput.checked;
         const imageUrl = this.currentImageData;
 
         if (!name) {
@@ -242,6 +262,7 @@ class MenuPage {
                 categoryId,
                 price,
                 available,
+                isPopular,
                 imageUrl,
             };
 
@@ -268,11 +289,34 @@ class MenuPage {
             categoryId: menu.categoryId,
             price: Number(menu.price || 0),
             available: !(Number(menu.available) || menu.available),
+            isPopular: Boolean(Number(menu.isPopular) || menu.isPopular),
             imageUrl: menu.imageUrl || menu.image || '',
         });
 
         await this.loadData();
         this.render();
+    }
+
+    async togglePopularity(menuId, isPopular) {
+        const menu = this.menus.find((item) => item.id === menuId);
+        if (!menu) return;
+
+        try {
+            await AdminStore.api.updateMenu(menuId, {
+                name: menu.name,
+                categoryId: menu.categoryId,
+                price: Number(menu.price || 0),
+                available: Boolean(Number(menu.available) || menu.available),
+                isPopular: isPopular,
+                imageUrl: menu.imageUrl || menu.image || '',
+            });
+
+            await this.loadData();
+            this.render();
+        } catch (error) {
+            window.alert(error.message || 'Gagal mengubah status popularitas menu.');
+            this.render();
+        }
     }
 
     async deleteMenu(menuId) {

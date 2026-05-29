@@ -47,6 +47,41 @@ function clearActiveOrder() {
   window.localStorage.removeItem(STORAGE_KEYS.activeOrder);
 }
 
+function normalizeTableNumber(value = "") {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9_-]/g, "")
+    .slice(0, 30);
+}
+
+function getActiveTableNumber() {
+  return normalizeTableNumber(window.localStorage.getItem(STORAGE_KEYS.activeTable));
+}
+
+function saveActiveTableNumber(tableNumber) {
+  const normalizedTableNumber = normalizeTableNumber(tableNumber);
+
+  if (!normalizedTableNumber) {
+    window.localStorage.removeItem(STORAGE_KEYS.activeTable);
+    return "";
+  }
+
+  window.localStorage.setItem(STORAGE_KEYS.activeTable, normalizedTableNumber);
+  return normalizedTableNumber;
+}
+
+function syncActiveTableFromLocation() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const tableNumberFromUrl = normalizeTableNumber(searchParams.get("table"));
+
+  if (tableNumberFromUrl) {
+    return saveActiveTableNumber(tableNumberFromUrl);
+  }
+
+  return getActiveTableNumber();
+}
+
 function getCartItems() {
   const items = readJsonStorage(STORAGE_KEYS.cart, []);
   return Array.isArray(items) ? items : [];
@@ -319,3 +354,5 @@ async function fetchOrderByNumber(orderNumber) {
 
   return window.UserApi.fetchOrderByNumber(orderNumber);
 }
+
+syncActiveTableFromLocation();

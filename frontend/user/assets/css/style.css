@@ -617,6 +617,14 @@ a {
   cursor: pointer;
 }
 
+.checkout-table-hint {
+  display: block;
+  margin-top: 0.45rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
 .recommendation-section {
   padding-bottom: 1rem;
 }
@@ -2400,5 +2408,4 @@ a {
 
 
 }
-
 

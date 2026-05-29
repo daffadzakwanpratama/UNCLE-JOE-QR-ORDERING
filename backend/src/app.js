@@ -6,6 +6,14 @@ const { createCorsOptions } = require("./config/cors");
 const { requestLogger } = require("./middlewares/requestLogger");
 const { notFoundHandler, errorHandler } = require("./middlewares/errorHandler");
 
+function normalizeTableNumber(value = "") {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9_-]/g, "")
+    .slice(0, 30);
+}
+
 function parseTrustProxySetting() {
   const rawValue = String(process.env.TRUST_PROXY || "").trim();
 
@@ -45,6 +53,17 @@ function createApp() {
 
   app.get("/admin", (request, response) => {
     response.redirect("/admin/pages/login.html");
+  });
+
+  app.get("/table/:tableNumber", (request, response) => {
+    const tableNumber = normalizeTableNumber(request.params.tableNumber);
+
+    if (!tableNumber) {
+      return response.redirect("/user/pages/index.html");
+    }
+
+    const searchParams = new URLSearchParams({ table: tableNumber });
+    return response.redirect(`/user/pages/index.html?${searchParams.toString()}`);
   });
 
   app.use("/uploads", express.static(uploadsPath));

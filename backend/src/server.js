@@ -1,6 +1,6 @@
 const dotenv = require("dotenv");
 const { createApp } = require("./app");
-const { testConnection } = require("./config/db");
+const { testConnection, migrateDatabase } = require("./config/db");
 const { parseAllowedOrigins, validateCorsConfiguration } = require("./config/cors");
 const {
   getUploadStorageMode,
@@ -20,6 +20,7 @@ async function startServer() {
   const uploadStorageMode = getUploadStorageMode();
 
   await testConnection();
+  await migrateDatabase();
 
   app.listen(port, () => {
     console.log(`QR Ordering backend listening on port ${port} (${nodeEnv}).`);

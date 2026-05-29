@@ -1834,6 +1834,103 @@ button, input, textarea, select { font: inherit; }
     box-shadow: inset 0 18px 36px rgba(0,0,0,0.05);
 }
 
+.admin-table-qr-form {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.admin-table-qr-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.admin-table-qr-field {
+    display: grid;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.admin-table-qr-field input {
+    width: 100%;
+    background: #171717;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text);
+}
+
+.admin-table-qr-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-table-qr-list {
+    gap: 12px;
+}
+
+.admin-table-qr-card {
+    align-items: center;
+}
+
+.admin-table-qr-preview {
+    width: 132px;
+    min-width: 132px;
+    aspect-ratio: 1 / 1;
+    padding: 10px;
+    border-radius: var(--r-md);
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.admin-table-qr-preview img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.admin-table-qr-copy {
+    display: grid;
+    gap: 8px;
+    flex: 1;
+}
+
+.admin-table-qr-copy p {
+    color: var(--text-muted);
+    word-break: break-all;
+}
+
+.admin-table-qr-copy strong {
+    margin-bottom: 0;
+    word-break: break-all;
+}
+
+.admin-table-qr-badge {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.24);
+    color: var(--accent-green);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.admin-table-qr-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — DESKTOP  ≥ 1024px
    ═══════════════════════════════════════════════════════════════════ */
@@ -2167,6 +2264,7 @@ button, input, textarea, select { font: inherit; }
     /* Collapsing grids */
     .admin-checklist,
     .admin-dual-grid,
+    .admin-table-qr-grid,
     .admin-banner-form,
     .admin-discount-form {
         grid-template-columns: 1fr !important;
@@ -2211,6 +2309,26 @@ button, input, textarea, select { font: inherit; }
     .admin-form-actions {
         flex-direction: column-reverse !important;
         gap: 8px !important;
+    }
+
+    .admin-table-qr-actions,
+    .admin-table-qr-card-actions {
+        flex-direction: column !important;
+    }
+
+    .admin-table-qr-preview {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 220px !important;
+        margin: 0 auto !important;
+    }
+
+    .admin-table-qr-actions .admin-primary-button,
+    .admin-table-qr-actions .admin-secondary-button,
+    .admin-table-qr-card-actions .admin-secondary-button,
+    .admin-table-qr-card-actions .admin-table-button {
+        width: 100% !important;
+        justify-content: center !important;
     }
 
     .admin-form-actions button { width: 100% !important; }
@@ -2275,4 +2393,50 @@ button, input, textarea, select { font: inherit; }
         max-width: none !important;
         text-align: left !important;
     }
+}
+
+/* Custom CSS Toggle Switch */
+.admin-switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+}
+
+.admin-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.admin-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-strong);
+    transition: .25s ease;
+    border-radius: 22px;
+}
+
+.admin-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #a3a3a3;
+    transition: .25s ease;
+    border-radius: 50%;
+}
+
+.admin-switch input:checked + .admin-slider {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.admin-switch input:checked + .admin-slider:before {
+    transform: translateX(20px);
+    background-color: #ffffff;
 }

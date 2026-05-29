@@ -67,6 +67,7 @@ const SORT_OPTIONS = [
 
 const STORAGE_KEYS = {
   activeOrder: "unclejo-active-order",
+  activeTable: "unclejo-active-table",
   activePromo: "unclejo-active-promo",
   cart: "unclejo-cart",
   feedback: "unclejo-feedback",

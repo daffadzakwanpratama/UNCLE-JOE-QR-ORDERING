@@ -18,6 +18,8 @@ const ORDER_STATUS_FLOW = {
   received: "preparing",
   preparing: "ready",
 };
+const ORDER_NUMBER_PREFIX = "ORD";
+const ORDER_NUMBER_MAX_RETRIES = 5;
 
 function calculateServiceFee(subtotal) {
   return subtotal > 0 ? SERVICE_FEE_AMOUNT : 0;
@@ -59,6 +61,39 @@ function normalizeOrderItems(items) {
   }));
 }
 
+function formatOrderDateSegment(date = new Date()) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+  return `${day}${month}${year}`;
+}
+
+function buildReadableOrderNumber(dateSegment, sequence) {
+  return `${ORDER_NUMBER_PREFIX}-${dateSegment}-${String(sequence).padStart(3, "0")}`;
+}
+
+async function generateReadableOrderNumber(connection, date = new Date()) {
+  const dateSegment = formatOrderDateSegment(date);
+  const orderPrefix = `${ORDER_NUMBER_PREFIX}-${dateSegment}-`;
+  const [rows] = await connection.execute(
+    `SELECT order_number AS orderNumber
+     FROM orders
+     WHERE order_number LIKE ?
+     ORDER BY id DESC
+     LIMIT 1`,
+    [`${orderPrefix}%`]
+  );
+
+  const latestOrderNumber = String(rows[0]?.orderNumber || "").trim();
+  const latestSequence = Number(latestOrderNumber.slice(orderPrefix.length)) || 0;
+
+  return buildReadableOrderNumber(dateSegment, latestSequence + 1);
+}
+
+function isDuplicateOrderNumberError(error) {
+  return error?.code === "ER_DUP_ENTRY" || error?.errno === 1062;
+}
+
 router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
   const orders = await query(
     `SELECT
@@ -75,6 +110,20 @@ router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
         o.discount_amount AS discountAmount,
         o.total,
         o.barista_note AS baristaNote,
+        GROUP_CONCAT(
+          CONCAT(
+            oi.qty,
+            "x ",
+            oi.menu_name,
+            CASE
+              WHEN oi.size_label IS NOT NULL AND TRIM(oi.size_label) <> ""
+              THEN CONCAT(" (", oi.size_label, ")")
+              ELSE ""
+            END
+          )
+          ORDER BY oi.id
+          SEPARATOR " | "
+        ) AS itemSummary,
         GROUP_CONCAT(
           CASE
             WHEN oi.note IS NOT NULL AND TRIM(oi.note) <> ""
@@ -227,7 +276,6 @@ router.patch("/:orderNumber/status", requireAdminAuth, asyncHandler(async (reque
 
 router.post("/", asyncHandler(async (request, response) => {
   const {
-    orderNumber = "",
     customerName = "",
     phoneNumber = "",
     tableNumber = "",
@@ -241,7 +289,6 @@ router.post("/", asyncHandler(async (request, response) => {
     baristaNote = "",
     items = [],
   } = request.body || {};
-  const normalizedOrderNumber = requireNonEmptyString(orderNumber, "Order number wajib diisi.", { maxLength: 30 });
   const normalizedCustomerName = requireNonEmptyString(
     customerName,
     "Customer, meja, dan metode pembayaran wajib diisi.",
@@ -393,87 +440,113 @@ router.post("/", asyncHandler(async (request, response) => {
   const connection = await pool.getConnection();
 
   try {
-    await connection.beginTransaction();
+    let createdOrder = null;
 
-    const [orderResult] = await connection.execute(
-      `INSERT INTO orders (
-        order_number,
-          customer_name,
-          phone_number,
-          table_number,
-          payment_method,
-          subtotal,
-          service_fee,
-          tax_amount,
-          discount_amount,
-          total,
-          promo_code,
-          barista_note
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        normalizedOrderNumber,
-        normalizedCustomerName,
-        normalizedPhoneNumber || null,
-        normalizedTableNumber,
-        normalizedPaymentMethod,
-        computedSubtotal,
-        computedServiceFee,
-        computedTaxAmount,
-        computedDiscountAmount,
-        computedTotal,
-        appliedPromoCode || null,
-        normalizedBaristaNote || null,
-      ]
-    );
+    for (let attempt = 0; attempt < ORDER_NUMBER_MAX_RETRIES; attempt += 1) {
+      let orderNumber = "";
 
-    const orderId = orderResult.insertId;
+      try {
+        await connection.beginTransaction();
+        orderNumber = await generateReadableOrderNumber(connection);
 
-    for (const item of computedItems) {
-      await connection.execute(
-        `INSERT INTO order_items (
-            order_id,
-            menu_id,
-            menu_name,
-            qty,
-            size_label,
-            note,
-            unit_price,
-            line_total
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          item.menuId,
-          item.menuName,
-          item.qty,
-          item.sizeLabel,
-          item.note,
-          item.unitPrice,
-          item.lineTotal,
-        ]
-      );
+        const [orderResult] = await connection.execute(
+          `INSERT INTO orders (
+            order_number,
+              customer_name,
+              phone_number,
+              table_number,
+              payment_method,
+              subtotal,
+              service_fee,
+              tax_amount,
+              discount_amount,
+              total,
+              promo_code,
+              barista_note
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            orderNumber,
+            normalizedCustomerName,
+            normalizedPhoneNumber || null,
+            normalizedTableNumber,
+            normalizedPaymentMethod,
+            computedSubtotal,
+            computedServiceFee,
+            computedTaxAmount,
+            computedDiscountAmount,
+            computedTotal,
+            appliedPromoCode || null,
+            normalizedBaristaNote || null,
+          ]
+        );
+
+        const orderId = orderResult.insertId;
+
+        for (const item of computedItems) {
+          await connection.execute(
+            `INSERT INTO order_items (
+                order_id,
+                menu_id,
+                menu_name,
+                qty,
+                size_label,
+                note,
+                unit_price,
+                line_total
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              orderId,
+              item.menuId,
+              item.menuName,
+              item.qty,
+              item.sizeLabel,
+              item.note,
+              item.unitPrice,
+              item.lineTotal,
+            ]
+          );
+        }
+
+        if (discountRow && appliedPromoCode) {
+          await connection.execute(
+            `UPDATE discounts
+             SET used_count = used_count + 1
+             WHERE id = ?
+               AND (
+                 usage_limit = 0
+                 OR used_count < usage_limit
+               )`,
+            [discountRow.id]
+          );
+        }
+
+        await connection.commit();
+        createdOrder = {
+          id: orderId,
+          orderNumber,
+        };
+        break;
+      } catch (error) {
+        await connection.rollback();
+
+        if (isDuplicateOrderNumberError(error) && attempt < ORDER_NUMBER_MAX_RETRIES - 1) {
+          continue;
+        }
+
+        throw error;
+      }
     }
 
-    if (discountRow && appliedPromoCode) {
-      await connection.execute(
-        `UPDATE discounts
-         SET used_count = used_count + 1
-         WHERE id = ?
-           AND (
-             usage_limit = 0
-             OR used_count < usage_limit
-           )`,
-        [discountRow.id]
-      );
+    if (!createdOrder) {
+      throw new Error("Gagal membuat kode pesanan yang unik.");
     }
-
-    await connection.commit();
 
     response.status(201).json({
       success: true,
       message: "Order berhasil dibuat.",
       data: {
-        id: orderId,
-        orderNumber: normalizedOrderNumber,
+        id: createdOrder.id,
+        orderNumber: createdOrder.orderNumber,
         totals: {
           subtotal: computedSubtotal,
           serviceFee: computedServiceFee,
@@ -485,7 +558,6 @@ router.post("/", asyncHandler(async (request, response) => {
       },
     });
   } catch (error) {
-    await connection.rollback();
     throw error;
   } finally {
     connection.release();

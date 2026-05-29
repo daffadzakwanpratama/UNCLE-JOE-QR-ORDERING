@@ -62,9 +62,34 @@ async function closePool() {
   await currentPool.end();
 }
 
+async function migrateDatabase() {
+  try {
+    const dbName = process.env.DB_NAME;
+    const columns = await query(
+      `SELECT COLUMN_NAME 
+       FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = :dbName 
+         AND TABLE_NAME = 'menus' 
+         AND COLUMN_NAME = 'is_popular'`,
+      { dbName }
+    );
+
+    if (columns.length === 0) {
+      console.log("Migrating database: Adding 'is_popular' column to 'menus' table...");
+      await getPool().execute(
+        `ALTER TABLE menus ADD COLUMN is_popular TINYINT(1) NOT NULL DEFAULT 0`
+      );
+      console.log("Database migration successful: 'is_popular' column added.");
+    }
+  } catch (error) {
+    console.error("Database migration failed:", error.message || error);
+  }
+}
+
 module.exports = {
   getPool,
   query,
   testConnection,
   closePool,
+  migrateDatabase,
 };
