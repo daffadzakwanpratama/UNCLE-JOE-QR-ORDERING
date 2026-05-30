@@ -457,8 +457,10 @@ button, input, textarea, select { font: inherit; }
    ═══════════════════════════════════════════════════════════════════ */
 
 .admin-sidebar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    width: var(--sidebar-w);
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -471,7 +473,6 @@ button, input, textarea, select { font: inherit; }
     -ms-overflow-style: none;
     gap: 0;
     z-index: 100;
-    align-self: start;
 }
 
 .admin-sidebar::-webkit-scrollbar { display: none; }
