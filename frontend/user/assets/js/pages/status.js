@@ -160,7 +160,7 @@ function renderStatusPage() {
       paymentBadgeText = "Tunai (Bayar di Kasir)";
     } else {
       paymentBadgeColor = "status-badge-pending";
-      paymentBadgeText = "Menunggu Pembayaran (QRIS)";
+      paymentBadgeText = "Menunggu Pembayaran (Non-Tunai)";
     }
   }
 

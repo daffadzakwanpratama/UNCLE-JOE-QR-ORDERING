@@ -1,5 +1,5 @@
 const paymentMethods = [
-  { key: "qris", title: "QRIS", subtitle: "Scan & Pay", icon: "&#129518;" },
+  { key: "qris", title: "Non-Tunai (Cashless)", subtitle: "QRIS, E-Wallet & Transfer Bank", icon: "&#128179;" },
   { key: "cash", title: "Tunai", subtitle: "Bayar di kasir", icon: "&#128181;" },
 ];
 
