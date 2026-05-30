@@ -2409,3 +2409,65 @@ a {
 
 }
 
+/* Midtrans Payment Gateway Integration Styles */
+.status-payment-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.status-payment-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-block;
+  letter-spacing: -0.01em;
+}
+
+.status-badge-pending {
+  background: rgba(245, 158, 11, 0.25);
+  color: #ffb74d;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.status-badge-paid {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.status-badge-failed {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.status-badge-cash {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.status-pay-now-button {
+  background: #ffffff;
+  border: 0;
+  color: #2f2924;
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease-in-out;
+}
+
+.status-pay-now-button:hover {
+  background: #f2f2f2;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+}
+
+

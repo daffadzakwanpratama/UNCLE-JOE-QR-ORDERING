@@ -70,9 +70,9 @@ router.get("/banners", asyncHandler(async (request, response) => {
         sort_order AS sortOrder,
         is_active AS isActive
      FROM banners
-     WHERE is_active = 1
-       AND (start_date IS NULL OR start_date <= CURDATE())
-       AND (end_date IS NULL OR end_date >= CURDATE())
+     WHERE is_active
+       AND (start_date IS NULL OR start_date <= CURRENT_DATE)
+       AND (end_date IS NULL OR end_date >= CURRENT_DATE)
      ORDER BY sort_order ASC, id DESC`
   );
 
@@ -100,9 +100,9 @@ router.get("/discounts", asyncHandler(async (request, response) => {
         is_active AS isActive,
         description
      FROM discounts
-     WHERE is_active = 1
-       AND (start_date IS NULL OR start_date <= CURDATE())
-       AND (end_date IS NULL OR end_date >= CURDATE())
+     WHERE is_active
+       AND (start_date IS NULL OR start_date <= CURRENT_DATE)
+       AND (end_date IS NULL OR end_date >= CURRENT_DATE)
        AND (usage_limit = 0 OR used_count < usage_limit)
      ORDER BY created_at DESC`
   );

@@ -283,11 +283,32 @@ function bindCheckoutActions(items, totals) {
         throw new Error("Server belum mengembalikan kode pesanan.");
       }
 
+      order.paymentToken = createdOrder?.paymentToken || null;
+      order.paymentStatus = "pending";
+
       saveActiveOrder(order);
       saveActiveTableNumber(order.meta.tableNumber);
       clearCartItems();
       clearActivePromoCode();
-      window.location.href = "./status.html";
+
+      if (createdOrder?.paymentToken) {
+        window.snap.pay(createdOrder.paymentToken, {
+          onSuccess: function (result) {
+            window.location.href = "./status.html";
+          },
+          onPending: function (result) {
+            window.location.href = "./status.html";
+          },
+          onError: function (result) {
+            window.location.href = "./status.html";
+          },
+          onClose: function () {
+            window.location.href = "./status.html";
+          }
+        });
+      } else {
+        window.location.href = "./status.html";
+      }
     } catch (error) {
       showCheckoutToast(error.message || "Pesanan gagal dikirim ke server.");
     }

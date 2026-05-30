@@ -2440,3 +2440,36 @@ button, input, textarea, select { font: inherit; }
     transform: translateX(20px);
     background-color: #ffffff;
 }
+
+/* Admin Payment Status Badges */
+.admin-payment-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: var(--r-xs);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: 6px;
+}
+
+.payment-status-paid {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    color: #34d399;
+}
+
+.payment-status-pending {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    color: #fbbf24;
+}
+
+.payment-status-failed {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: #f87171;
+}
+

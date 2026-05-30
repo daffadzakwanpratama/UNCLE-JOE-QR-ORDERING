@@ -140,6 +140,29 @@ function renderStatusPage() {
   }
 
   const totals = getOrderTotals(order);
+  const paymentMethodLower = String(order.meta?.paymentMethod || "").toLowerCase();
+  const isQris = paymentMethodLower === "qris";
+  const isPaid = String(order.paymentStatus || "").toLowerCase() === "paid";
+  
+  let paymentBadgeColor = "status-badge-pending";
+  let paymentBadgeText = "Menunggu Pembayaran";
+  
+  if (isPaid) {
+    paymentBadgeColor = "status-badge-paid";
+    paymentBadgeText = isQris ? "Pembayaran Berhasil" : "Lunas (Sudah Dibayar)";
+  } else if (order.paymentStatus === "failed") {
+    paymentBadgeColor = "status-badge-failed";
+    paymentBadgeText = "Pembayaran Gagal";
+  } else {
+    // Masih pending
+    if (paymentMethodLower === "cash") {
+      paymentBadgeColor = "status-badge-cash";
+      paymentBadgeText = "Tunai (Bayar di Kasir)";
+    } else {
+      paymentBadgeColor = "status-badge-pending";
+      paymentBadgeText = "Menunggu Pembayaran (QRIS)";
+    }
+  }
 
   container.innerHTML = `
     <section class="status-hero-card">
@@ -158,6 +181,16 @@ function renderStatusPage() {
         <div>
           <span>Estimasi Waktu</span>
           <strong>${escapeHTML(order.estimate)}</strong>
+        </div>
+      </div>
+      <div class="status-estimate-card status-payment-status-card">
+        <div class="status-estimate-icon" aria-hidden="true">&#128179;</div>
+        <div>
+          <span>Status Pembayaran</span>
+          <div class="status-payment-badge-row">
+            <strong class="status-payment-badge ${paymentBadgeColor}">${paymentBadgeText}</strong>
+            ${isQris && !isPaid && order.paymentToken ? `<button class="status-pay-now-button" id="payNowButton">Bayar Sekarang</button>` : ""}
+          </div>
         </div>
       </div>
     </section>
@@ -190,6 +223,25 @@ function renderStatusPage() {
     clearActiveOrder();
     window.location.href = "./index.html";
   });
+
+  if (isQris && !isPaid && order.paymentToken) {
+    document.getElementById("payNowButton")?.addEventListener("click", () => {
+      window.snap.pay(order.paymentToken, {
+        onSuccess: function (result) {
+          window.location.reload();
+        },
+        onPending: function (result) {
+          window.location.reload();
+        },
+        onError: function (result) {
+          alert("Pembayaran gagal!");
+        },
+        onClose: function () {
+          // Popup ditutup oleh pengguna
+        }
+      });
+    });
+  }
 }
 
 async function initStatusPage() {
@@ -201,6 +253,8 @@ async function initStatusPage() {
       saveActiveOrder({
         ...localOrder,
         currentStep: mapOrderStatusToStep(remoteOrder.status),
+        paymentToken: remoteOrder.paymentToken || localOrder.paymentToken || null,
+        paymentStatus: remoteOrder.paymentStatus || localOrder.paymentStatus || "pending",
         items: Array.isArray(remoteOrder.items) && remoteOrder.items.length
           ? remoteOrder.items.map((item) => ({
             ...item,
@@ -234,6 +288,25 @@ async function initStatusPage() {
 
   updateCartBadge();
   renderStatusPage();
+
+  // Auto-polling status pembayaran jika menggunakan QRIS dan belum lunas
+  const activeOrder = getActiveOrder();
+  const isQris = String(activeOrder?.meta?.paymentMethod || "").toLowerCase() === "qris";
+  const isPaid = String(activeOrder?.paymentStatus || "").toLowerCase() === "paid";
+
+  if (isQris && !isPaid && activeOrder?.orderNumber) {
+    const statusInterval = window.setInterval(async () => {
+      try {
+        const remoteOrder = await fetchOrderByNumber(activeOrder.orderNumber);
+        if (remoteOrder && String(remoteOrder.paymentStatus || "").toLowerCase() === "paid") {
+          window.clearInterval(statusInterval);
+          window.location.reload(); // Reload untuk memperbarui tampilan menjadi Lunas/Pembayaran Berhasil
+        }
+      } catch (pollError) {
+        // Abaikan error koneksi saat polling
+      }
+    }, 4000); // Poll setiap 4 detik
+  }
 }
 
 initStatusPage();

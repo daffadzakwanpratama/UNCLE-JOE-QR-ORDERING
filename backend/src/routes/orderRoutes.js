@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const { getPool, query } = require("../config/db");
 const { requireAdminAuth } = require("../middlewares/adminAuth");
 const { formatDateOnly, getTodayDateLabel } = require("../utils/date");
@@ -76,7 +77,7 @@ async function generateReadableOrderNumber(connection, date = new Date()) {
   const dateSegment = formatOrderDateSegment(date);
   const orderPrefix = `${ORDER_NUMBER_PREFIX}-${dateSegment}-`;
   const [rows] = await connection.execute(
-    `SELECT order_number AS orderNumber
+    `SELECT order_number AS "orderNumber"
      FROM orders
      WHERE order_number LIKE ?
      ORDER BY id DESC
@@ -98,42 +99,42 @@ router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
   const orders = await query(
     `SELECT
         o.id,
-        o.order_number AS orderNumber,
-        o.customer_name AS customerName,
-        o.phone_number AS phoneNumber,
-        o.table_number AS tableNumber,
-        o.payment_method AS paymentMethod,
+        o.order_number AS "orderNumber",
+        o.customer_name AS "customerName",
+        o.phone_number AS "phoneNumber",
+        o.table_number AS "tableNumber",
+        o.payment_method AS "paymentMethod",
+        o.payment_status AS "paymentStatus",
+        o.payment_token AS "paymentToken",
         o.status,
         o.subtotal,
-        o.service_fee AS serviceFee,
-        o.tax_amount AS taxAmount,
-        o.discount_amount AS discountAmount,
+        o.service_fee AS "serviceFee",
+        o.tax_amount AS "taxAmount",
+        o.discount_amount AS "discountAmount",
         o.total,
-        o.barista_note AS baristaNote,
-        GROUP_CONCAT(
+        o.barista_note AS "baristaNote",
+        string_agg(
           CONCAT(
             oi.qty,
-            "x ",
+            'x ',
             oi.menu_name,
             CASE
-              WHEN oi.size_label IS NOT NULL AND TRIM(oi.size_label) <> ""
-              THEN CONCAT(" (", oi.size_label, ")")
-              ELSE ""
+              WHEN oi.size_label IS NOT NULL AND TRIM(oi.size_label) <> ''
+              THEN CONCAT(' (', oi.size_label, ')')
+              ELSE ''
             END
-          )
-          ORDER BY oi.id
-          SEPARATOR " | "
-        ) AS itemSummary,
-        GROUP_CONCAT(
+          ),
+          ' | ' ORDER BY oi.id
+        ) AS "itemSummary",
+        string_agg(
           CASE
-            WHEN oi.note IS NOT NULL AND TRIM(oi.note) <> ""
-            THEN CONCAT(oi.menu_name, ": ", oi.note)
+            WHEN oi.note IS NOT NULL AND TRIM(oi.note) <> ''
+            THEN CONCAT(oi.menu_name, ': ', oi.note)
             ELSE NULL
-          END
-          ORDER BY oi.id
-          SEPARATOR " | "
-        ) AS itemNotes,
-        o.created_at AS createdAt
+          END,
+          ' | ' ORDER BY oi.id
+        ) AS "itemNotes",
+        o.created_at AS "createdAt"
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
       GROUP BY
@@ -143,6 +144,8 @@ router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
         o.phone_number,
         o.table_number,
         o.payment_method,
+        o.payment_status,
+        o.payment_token,
         o.status,
         o.subtotal,
         o.service_fee,
@@ -166,27 +169,29 @@ router.get("/:orderNumber", asyncHandler(async (request, response) => {
   const orders = await query(
     `SELECT
         o.id,
-        o.order_number AS orderNumber,
-        o.customer_name AS customerName,
-        o.phone_number AS phoneNumber,
-        o.table_number AS tableNumber,
-        o.payment_method AS paymentMethod,
+        o.order_number AS "orderNumber",
+        o.customer_name AS "customerName",
+        o.phone_number AS "phoneNumber",
+        o.table_number AS "tableNumber",
+        o.payment_method AS "paymentMethod",
+        o.payment_status AS "paymentStatus",
+        o.payment_token AS "paymentToken",
         o.status,
         o.subtotal,
-        o.service_fee AS serviceFee,
-        o.tax_amount AS taxAmount,
-        o.discount_amount AS discountAmount,
+        o.service_fee AS "serviceFee",
+        o.tax_amount AS "taxAmount",
+        o.discount_amount AS "discountAmount",
         o.total,
-        o.promo_code AS promoCode,
-        o.barista_note AS baristaNote,
-        o.created_at AS createdAt
+        o.promo_code AS "promoCode",
+        o.barista_note AS "baristaNote",
+        o.created_at AS "createdAt"
      FROM orders o
      WHERE o.order_number = :orderNumber
      LIMIT 1`,
     { orderNumber }
   );
 
-  const order = orders[0];
+  let order = orders[0];
 
   if (!order) {
     return response.status(404).json({
@@ -195,16 +200,72 @@ router.get("/:orderNumber", asyncHandler(async (request, response) => {
     });
   }
 
+  // FALLBACK SYNC: Jika pembayaran QRIS masih pending di DB kita, cek status langsung ke Midtrans API
+  if (String(order.paymentMethod).toLowerCase() === "qris" && String(order.paymentStatus).toLowerCase() === "pending") {
+    try {
+      const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
+      const MIDTRANS_IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
+      const statusUrl = MIDTRANS_IS_PRODUCTION
+        ? `https://api.midtrans.com/v2/${order.orderNumber}/status`
+        : `https://api.sandbox.midtrans.com/v2/${order.orderNumber}/status`;
+
+      const midtransRes = await fetch(statusUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
+        },
+      });
+
+      if (midtransRes.ok) {
+        const statusData = await midtransRes.json();
+        const transactionStatus = statusData.transaction_status;
+        const fraudStatus = statusData.fraud_status;
+
+        let newPaymentStatus = "pending";
+
+        if (transactionStatus === "capture") {
+          if (fraudStatus === "accept") {
+            newPaymentStatus = "paid";
+          }
+        } else if (transactionStatus === "settlement") {
+          newPaymentStatus = "paid";
+        } else if (["cancel", "deny", "expire"].includes(transactionStatus)) {
+          newPaymentStatus = "failed";
+        }
+
+        if (newPaymentStatus !== order.paymentStatus) {
+          // Update database
+          await query(
+            `UPDATE orders
+             SET payment_status = :newPaymentStatus
+             WHERE id = :id`,
+            {
+              newPaymentStatus,
+              id: order.id,
+            }
+          );
+          // Perbarui objek lokal order untuk respons ini
+          order.paymentStatus = newPaymentStatus;
+          console.log(`[Midtrans Fallback Sync] Status order ${order.orderNumber} berhasil disinkronkan ke '${newPaymentStatus}'`);
+        }
+      }
+    } catch (fallbackError) {
+      console.error("[Midtrans Fallback Sync] Gagal menyinkronkan status order:", fallbackError.message || fallbackError);
+    }
+  }
+
   const items = await query(
     `SELECT
         id,
-        menu_id AS menuId,
-        menu_name AS menuName,
+        menu_id AS "menuId",
+        menu_name AS "menuName",
         qty,
-        size_label AS sizeLabel,
+        size_label AS "sizeLabel",
         note,
-        unit_price AS unitPrice,
-        line_total AS lineTotal
+        unit_price AS "unitPrice",
+        line_total AS "lineTotal"
      FROM order_items
      WHERE order_id = :orderId
      ORDER BY id ASC`,
@@ -541,12 +602,101 @@ router.post("/", asyncHandler(async (request, response) => {
       throw new Error("Gagal membuat kode pesanan yang unik.");
     }
 
+    let paymentToken = null;
+    let paymentUrl = null;
+
+    // Call Midtrans Snap if payment method is cashless
+    if (normalizedPaymentMethod === "qris") {
+      try {
+        const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
+        const MIDTRANS_IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
+        const MIDTRANS_SNAP_URL = MIDTRANS_IS_PRODUCTION
+          ? "https://app.midtrans.com/snap/v1/transactions"
+          : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+
+        const midtransPayload = {
+          transaction_details: {
+            order_id: createdOrder.orderNumber,
+            gross_amount: computedTotal,
+          },
+          credit_card: {
+            secure: true,
+          },
+          customer_details: {
+            first_name: normalizedCustomerName,
+            phone: normalizedPhoneNumber || "",
+          },
+          item_details: computedItems.map((item) => ({
+            id: String(item.menuId),
+            price: item.unitPrice,
+            quantity: item.qty,
+            name: item.menuName.slice(0, 50),
+          })).concat(
+            computedServiceFee > 0 ? [{
+              id: "SERVICE_FEE",
+              price: computedServiceFee,
+              quantity: 1,
+              name: "Biaya Layanan",
+            }] : []
+          ).concat(
+            computedTaxAmount > 0 ? [{
+              id: "TAX",
+              price: computedTaxAmount,
+              quantity: 1,
+              name: "Pajak (10%)",
+            }] : []
+          ).concat(
+            computedDiscountAmount > 0 ? [{
+              id: "PROMO_DISCOUNT",
+              price: -computedDiscountAmount,
+              quantity: 1,
+              name: `Promo (${appliedPromoCode})`,
+            }] : []
+          ),
+        };
+
+        const midtransRes = await fetch(MIDTRANS_SNAP_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
+          },
+          body: JSON.stringify(midtransPayload),
+        });
+
+        const midtransData = await midtransRes.json();
+
+        if (midtransRes.ok && midtransData.token) {
+          paymentToken = midtransData.token;
+          paymentUrl = midtransData.redirect_url;
+
+          // Update payment_token in the database
+          await query(
+            `UPDATE orders
+             SET payment_token = :paymentToken
+             WHERE id = :id`,
+            {
+              paymentToken,
+              id: createdOrder.id,
+            }
+          );
+        } else {
+          console.error("Midtrans API Error Details:", JSON.stringify(midtransData));
+        }
+      } catch (midError) {
+        console.error("Gagal menghubungi Midtrans:", midError.message || midError);
+      }
+    }
+
     response.status(201).json({
       success: true,
       message: "Order berhasil dibuat.",
       data: {
         id: createdOrder.id,
         orderNumber: createdOrder.orderNumber,
+        paymentToken,
+        paymentUrl,
         totals: {
           subtotal: computedSubtotal,
           serviceFee: computedServiceFee,
@@ -562,6 +712,77 @@ router.post("/", asyncHandler(async (request, response) => {
   } finally {
     connection.release();
   }
+}));
+
+// Endpoint Webhook untuk Midtrans Callback
+router.post("/payment/notification", asyncHandler(async (request, response) => {
+  const notification = request.body || {};
+  
+  const orderId = notification.order_id;
+  const statusCode = notification.status_code;
+  const grossAmount = notification.gross_amount;
+  const signatureKey = notification.signature_key;
+  const transactionStatus = notification.transaction_status;
+  const fraudStatus = notification.fraud_status;
+
+  if (!orderId || !statusCode || !grossAmount || !signatureKey) {
+    return response.status(400).json({
+      success: false,
+      message: "Payload notifikasi tidak valid.",
+    });
+  }
+
+  // 1. Verifikasi tanda tangan keamanan dari Midtrans
+  const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
+  const stringToHash = `${orderId}${statusCode}${grossAmount}${serverKey}`;
+  const computedSignature = crypto.createHash("sha512").update(stringToHash).digest("hex");
+
+  if (computedSignature !== signatureKey) {
+    console.error(`[Midtrans Webhook] Tanda tangan tidak valid untuk order ${orderId}`);
+    return response.status(403).json({
+      success: false,
+      message: "Tanda tangan keamanan tidak valid.",
+    });
+  }
+
+  console.log(`[Midtrans Webhook] Notifikasi diterima untuk order ${orderId}, status: ${transactionStatus}`);
+
+  // 2. Petakan transaction_status ke payment_status aplikasi kita
+  let paymentStatus = "pending";
+  
+  if (transactionStatus === "capture") {
+    if (fraudStatus === "challenge") {
+      paymentStatus = "pending";
+    } else if (fraudStatus === "accept") {
+      paymentStatus = "paid";
+    }
+  } else if (transactionStatus === "settlement") {
+    paymentStatus = "paid";
+  } else if (["cancel", "deny", "expire"].includes(transactionStatus)) {
+    paymentStatus = "failed";
+  } else if (transactionStatus === "pending") {
+    paymentStatus = "pending";
+  }
+
+  // 3. Update status pembayaran di database
+  await query(
+    `UPDATE orders
+     SET payment_status = :paymentStatus
+     WHERE order_number = :orderId`,
+    {
+      paymentStatus,
+      orderId,
+    }
+  );
+
+  response.json({
+    success: true,
+    message: "Notifikasi berhasil diproses.",
+    data: {
+      orderId,
+      paymentStatus,
+    }
+  });
 }));
 
 module.exports = router;

@@ -58,7 +58,7 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
   const normalizedIsActive = normalizeBoolean(isActive);
   ensureDateRange(normalizedStartDate, normalizedEndDate, "Tanggal mulai tidak boleh melebihi tanggal akhir.");
 
-  const storedImageUrl = saveImageValue(imageUrl, "banners");
+  const storedImageUrl = await saveImageValue(imageUrl, "banners");
 
   const [result] = await getPool().execute(
     `INSERT INTO banners (
@@ -129,7 +129,7 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
     });
   }
 
-  const storedImageUrl = saveImageValue(
+  const storedImageUrl = await saveImageValue(
     imageUrl,
     "banners",
     existingBanner.imageUrl || ""
@@ -191,7 +191,7 @@ router.delete("/:id", requireAdminAuth, asyncHandler(async (request, response) =
     [bannerId]
   );
 
-  deleteManagedFile(existingBanner.imageUrl || "");
+  await deleteManagedFile(existingBanner.imageUrl || "");
 
   response.json({
     success: true,

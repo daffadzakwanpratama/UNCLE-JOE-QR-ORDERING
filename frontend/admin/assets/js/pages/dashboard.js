@@ -119,6 +119,34 @@ function renderTransactionList(container, orders) {
         const hasNote = transactionNote !== '-' && transactionNote.trim() !== 'Tidak ada catatan tambahan.';
         const transactionItemsMarkup = renderTransactionItems(transaction);
 
+        const paymentMethodLabel = String(transaction.paymentMethod || 'cash').toUpperCase();
+        let paymentStatusLabel = '';
+        let paymentStatusClass = '';
+        
+        if (paymentMethodLabel === 'QRIS') {
+            const status = String(transaction.paymentStatus || 'pending').toLowerCase();
+            if (status === 'paid') {
+                paymentStatusLabel = 'Sudah Bayar';
+                paymentStatusClass = 'payment-status-paid';
+            } else if (status === 'failed') {
+                paymentStatusLabel = 'Gagal';
+                paymentStatusClass = 'payment-status-failed';
+            } else {
+                paymentStatusLabel = 'Belum Bayar';
+                paymentStatusClass = 'payment-status-pending';
+            }
+        } else {
+            // Cash payment
+            const status = String(transaction.paymentStatus || 'pending').toLowerCase();
+            if (status === 'paid') {
+                paymentStatusLabel = 'Lunas (Tunai)';
+                paymentStatusClass = 'payment-status-paid';
+            } else {
+                paymentStatusLabel = 'Belum Lunas';
+                paymentStatusClass = 'payment-status-pending';
+            }
+        }
+
         return `
             <article class="admin-transaction-card">
                 <div class="admin-transaction-top">
@@ -139,7 +167,10 @@ function renderTransactionList(container, orders) {
                 </div>
                 <div class="admin-transaction-meta">
                     <span>Payment</span>
-                    <p>${escapeHtml(transaction.paymentMethod || '-')}</p>
+                    <p>
+                        <strong>${escapeHtml(paymentMethodLabel)}</strong>
+                        <span class="admin-payment-status-badge ${paymentStatusClass}">${escapeHtml(paymentStatusLabel)}</span>
+                    </p>
                 </div>
                 <div class="admin-transaction-items">
                     <span>Items</span>

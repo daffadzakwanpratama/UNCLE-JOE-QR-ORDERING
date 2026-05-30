@@ -56,7 +56,7 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
   const normalizedAvailable = normalizeBoolean(available);
   const normalizedIsPopular = normalizeBoolean(isPopular);
 
-  const storedImageUrl = saveImageValue(imageUrl, "menus");
+  const storedImageUrl = await saveImageValue(imageUrl, "menus");
 
   const [result] = await getPool().execute(
     `INSERT INTO menus (
@@ -122,7 +122,7 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
     });
   }
 
-  const storedImageUrl = saveImageValue(
+  const storedImageUrl = await saveImageValue(
     imageUrl,
     "menus",
     existingMenu.imageUrl || ""
@@ -184,7 +184,7 @@ router.delete("/:id", requireAdminAuth, asyncHandler(async (request, response) =
     [menuId]
   );
 
-  deleteManagedFile(existingMenu.imageUrl || "");
+  await deleteManagedFile(existingMenu.imageUrl || "");
 
   response.json({
     success: true,
