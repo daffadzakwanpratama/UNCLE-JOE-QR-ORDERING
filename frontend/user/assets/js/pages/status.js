@@ -206,7 +206,6 @@ function renderStatusPage() {
           <span>Status Pembayaran</span>
           <div class="status-payment-badge-row">
             <strong class="status-payment-badge ${paymentBadgeColor}">${paymentBadgeText}</strong>
-            ${isQris && !isPaid && order.paymentToken ? `<button class="status-pay-now-button" id="payNowButton">Bayar Sekarang</button>` : ""}
           </div>
         </div>
       </div>
@@ -261,7 +260,6 @@ function renderStatusPage() {
 
   if (isQris && !isPaid) {
     document.getElementById("payNowPrimaryButton")?.addEventListener("click", triggerMidtransSnap);
-    document.getElementById("payNowButton")?.addEventListener("click", triggerMidtransSnap);
   } else {
     document.getElementById("completeOrderButton")?.addEventListener("click", () => {
       clearActiveOrder();
