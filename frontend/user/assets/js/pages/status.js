@@ -164,6 +164,23 @@ function renderStatusPage() {
     }
   }
 
+  const showCashTicket = (paymentMethodLower === "cash" && !isPaid);
+  const cashTicketMarkup = showCashTicket ? `
+    <section class="status-cash-ticket">
+      <h3>🎟️ Tiket Pembayaran Kasir</h3>
+      <p>Tunjukkan QR Code dinamis atau sampaikan Nomor Pesanan di bawah ini kepada kasir di meja pembayaran untuk melunasi pesanan Anda secara tunai.</p>
+      
+      <div class="status-cash-qr-container">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(order.orderNumber)}&color=5b4636" alt="QR Code Nomor Pesanan" />
+      </div>
+
+      <div class="status-cash-ticket-divider"></div>
+      
+      <p>Nomor Pesanan Anda</p>
+      <strong class="status-cash-ticket-code">${escapeHTML(order.orderNumber)}</strong>
+    </section>
+  ` : '';
+
   container.innerHTML = `
     <section class="status-hero-card">
       <div class="status-hero-main">
@@ -194,6 +211,8 @@ function renderStatusPage() {
         </div>
       </div>
     </section>
+
+    ${cashTicketMarkup}
 
     <section class="status-panel">
       <h2>Status Pesanan</h2>
@@ -296,12 +315,11 @@ async function initStatusPage() {
   updateCartBadge();
   renderStatusPage();
 
-  // Auto-polling status pembayaran jika menggunakan QRIS dan belum lunas
+  // Auto-polling status pembayaran jika pesanan belum lunas (berlaku untuk Cash & QRIS)
   const activeOrder = getActiveOrder();
-  const isQris = String(activeOrder?.meta?.paymentMethod || "").toLowerCase() === "qris";
   const isPaid = String(activeOrder?.paymentStatus || "").toLowerCase() === "paid";
 
-  if (isQris && !isPaid && activeOrder?.orderNumber) {
+  if (!isPaid && activeOrder?.orderNumber) {
     const statusInterval = window.setInterval(async () => {
       try {
         const remoteOrder = await fetchOrderByNumber(activeOrder.orderNumber);
