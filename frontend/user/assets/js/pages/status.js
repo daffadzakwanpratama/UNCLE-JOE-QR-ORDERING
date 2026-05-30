@@ -215,31 +215,38 @@ function renderStatusPage() {
     </section>
 
     <section class="status-action-area">
-      <button class="status-complete-button" type="button" id="completeOrderButton">Pesanan Telah Diterima</button>
+      ${isQris && !isPaid
+        ? `<button class="status-complete-button" type="button" id="payNowPrimaryButton">Bayar Sekarang</button>`
+        : `<button class="status-complete-button" type="button" id="completeOrderButton">Pesanan Telah Diterima</button>`
+      }
     </section>
   `;
 
-  document.getElementById("completeOrderButton").addEventListener("click", () => {
-    clearActiveOrder();
-    window.location.href = "./index.html";
-  });
+  function triggerMidtransSnap() {
+    if (!order.paymentToken) return;
+    window.snap.pay(order.paymentToken, {
+      onSuccess: function (result) {
+        window.location.reload();
+      },
+      onPending: function (result) {
+        window.location.reload();
+      },
+      onError: function (result) {
+        alert("Pembayaran gagal!");
+      },
+      onClose: function () {
+        // Popup ditutup oleh pengguna
+      }
+    });
+  }
 
-  if (isQris && !isPaid && order.paymentToken) {
-    document.getElementById("payNowButton")?.addEventListener("click", () => {
-      window.snap.pay(order.paymentToken, {
-        onSuccess: function (result) {
-          window.location.reload();
-        },
-        onPending: function (result) {
-          window.location.reload();
-        },
-        onError: function (result) {
-          alert("Pembayaran gagal!");
-        },
-        onClose: function () {
-          // Popup ditutup oleh pengguna
-        }
-      });
+  if (isQris && !isPaid) {
+    document.getElementById("payNowPrimaryButton")?.addEventListener("click", triggerMidtransSnap);
+    document.getElementById("payNowButton")?.addEventListener("click", triggerMidtransSnap);
+  } else {
+    document.getElementById("completeOrderButton")?.addEventListener("click", () => {
+      clearActiveOrder();
+      window.location.href = "./index.html";
     });
   }
 }
