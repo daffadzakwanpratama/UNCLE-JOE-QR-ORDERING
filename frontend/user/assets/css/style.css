@@ -372,6 +372,25 @@ a {
   transform: scale(1.02);
 }
 
+.hero-card.is-placeholder {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(91, 70, 54, 0.12), var(--shadow);
+}
+
+.hero-card.is-placeholder::before {
+  display: none;
+}
+
+.hero-card.is-placeholder .hero-copy h3 {
+  color: var(--accent-dark);
+}
+
+.hero-card.is-placeholder .hero-copy p {
+  color: var(--accent);
+  opacity: 0.85;
+}
+
 .hero-copy {
   position: relative;
   z-index: 1;

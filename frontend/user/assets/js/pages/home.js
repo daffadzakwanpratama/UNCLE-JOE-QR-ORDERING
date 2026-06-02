@@ -35,7 +35,7 @@ function renderHero() {
   if (!heroBanners.length) {
     track.innerHTML = `
       <div class="hero-slide">
-        <article class="hero-card">
+        <article class="hero-card is-placeholder">
           <div class="hero-copy">
             <h3>Belum ada banner</h3>
             <p>Tambahkan banner dari panel admin untuk menampilkan promo di sini.</p>
