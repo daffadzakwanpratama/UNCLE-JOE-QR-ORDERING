@@ -18,6 +18,11 @@
   --radius-lg: 20px;
   --radius-md: 16px;
   --shell-width: 560px;
+  
+  /* iOS Animation Easing & Timing */
+  --ease-ios: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-ios: transform 0.22s var(--ease-ios), background-color 0.22s ease, opacity 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 * {
@@ -26,6 +31,7 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent; /* Remove gray overlay on iOS tap */
 }
 
 body {
@@ -34,7 +40,9 @@ body {
     radial-gradient(circle at top, rgba(91, 70, 54, 0.1), transparent 24rem),
     linear-gradient(180deg, #fbfaf7 0%, #eee8de 100%);
   color: var(--text);
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -57,6 +65,21 @@ a {
   margin: 0 auto;
   background: var(--surface);
   box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.08);
+}
+
+/* Glassmorphic Sticky Headers */
+.topbar,
+.status-topbar,
+.search-topbar {
+  position: sticky !important;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: var(--transition-ios);
 }
 
 .topbar {
@@ -203,7 +226,7 @@ a {
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
   transform: translateY(18px) scale(0.98);
   opacity: 0;
-  transition: transform 0.26s ease, opacity 0.26s ease;
+  transition: transform 0.4s var(--ease-spring), opacity 0.3s ease;
   pointer-events: auto;
 }
 
@@ -752,17 +775,11 @@ a {
 }
 
 .status-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   display: grid;
   grid-template-columns: 40px 1fr 40px;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.88);
-  backdrop-filter: blur(10px);
 }
 
 .status-topbar h1 {
@@ -2256,9 +2273,11 @@ a {
   width: min(100%, var(--shell-width));
   transform: translateX(-50%);
   padding: 0.7rem 0.8rem calc(0.7rem + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.96);
-  border-top: 1px solid rgba(226, 232, 240, 0.85);
-  backdrop-filter: blur(14px);
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.6) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.02);
 }
 
 .bottom-link {
@@ -2268,10 +2287,19 @@ a {
   gap: 0.28rem;
   color: #a1a1aa;
   font-size: 0.92rem;
+  transition: transform 0.22s var(--ease-ios), color 0.22s ease;
+}
+
+.bottom-link:active {
+  transform: scale(0.92);
 }
 
 .bottom-link.is-active {
   color: var(--accent);
+}
+
+.bottom-link.is-active .bottom-icon svg {
+  animation: popIn 0.3s var(--ease-ios) both;
 }
 
 .bottom-icon {
@@ -2553,6 +2581,131 @@ a {
   letter-spacing: 0.05em;
   margin-top: 0.5rem;
   display: block;
+}
+
+/* =========================================================
+   iOS ANIMATIONS & VISUAL POLISH (PREMIUM FEEL)
+   ========================================================= */
+
+/* 1. iOS Page Slide Fade-In Transition */
+@keyframes iosPageTransition {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-content {
+  animation: iosPageTransition 0.5s var(--ease-ios) both;
+}
+
+/* 2. Dynamic Component Mount Transition (Staggered Fade-in-up) */
+@keyframes iosFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popular-card,
+.search-menu-card,
+.recommendation-card,
+.cart-item-card,
+.checkout-summary-card,
+.checkout-form-section,
+.status-hero-card,
+.status-panel,
+.detail-media,
+.detail-panel {
+  animation: iosFadeInUp 0.45s var(--ease-ios) both;
+}
+
+/* 3. iOS Haptic Press Feedback (Active Scaling) */
+.order-button,
+.detail-add-button,
+.status-button,
+.back-button,
+.category-chip,
+.search-category-pill,
+.size-chip,
+.quantity-button,
+.cart-qty-button,
+.cart-promo-button,
+.cart-checkout-button,
+.status-pay-now-button,
+.status-complete-button,
+.checkout-method-trigger,
+.checkout-confirm-button {
+  transition: var(--transition-ios) !important;
+}
+
+.order-button:active,
+.detail-add-button:active,
+.status-button:active,
+.back-button:active,
+.category-chip:active,
+.search-category-pill:active,
+.size-chip:active,
+.quantity-button:active,
+.cart-qty-button:active,
+.cart-promo-button:active,
+.cart-checkout-button:active,
+.status-pay-now-button:active,
+.status-complete-button:active,
+.checkout-method-trigger:active,
+.checkout-confirm-button:active {
+  transform: scale(0.96) !important;
+  opacity: 0.92 !important;
+}
+
+/* 4. Active State Pop-In Animation */
+@keyframes popIn {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.category-chip.is-active,
+.search-category-pill.is-active,
+.size-chip.is-active {
+  animation: popIn 0.3s var(--ease-ios) both;
+}
+
+/* 5. Smooth Hover Image Zoom and Shadow Transitions */
+.popular-card,
+.search-menu-card,
+.recommendation-card,
+.cart-item-card {
+  transition: transform 0.35s var(--ease-ios), box-shadow 0.35s var(--ease-ios), border-color 0.35s ease;
+}
+
+.popular-card:hover,
+.search-menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  border-color: rgba(91, 70, 54, 0.15);
+}
+
+.popular-media img,
+.search-menu-media img,
+.recommendation-thumb img {
+  transition: transform 0.5s var(--ease-ios);
+}
+
+.popular-card:hover .popular-media img,
+.search-menu-card:hover .search-menu-media img {
+  transform: scale(1.04);
 }
 
 
