@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -70,7 +70,10 @@
                     <h2 id="reportDetailTitle">Detail Transaksi</h2>
                     <p id="reportDetailSubtitle">Lihat rincian transaksi yang dipilih.</p>
                 </div>
-                <button type="button" class="admin-icon-button" id="reportDetailCloseButton" aria-label="Tutup detail transaksi">x</button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="admin-secondary-button" id="reportDetailPrintButton" style="padding: 6px 12px; font-size: 0.82rem;">Cetak Struk</button>
+                    <button type="button" class="admin-icon-button" id="reportDetailCloseButton" aria-label="Tutup detail transaksi">x</button>
+                </div>
             </div>
 
             <div class="admin-report-detail-grid" id="reportDetailGrid"></div>

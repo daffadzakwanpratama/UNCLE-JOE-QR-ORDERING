@@ -35,6 +35,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncClearButtonState(clearButton, orders);
 
         transactionList.addEventListener('click', async (event) => {
+            const printButton = event.target.closest('[data-order-print]');
+            if (printButton) {
+                const orderNumber = printButton.dataset.orderPrint || '';
+                if (!orderNumber) {
+                    return;
+                }
+
+                const originalLabel = printButton.textContent;
+                printButton.disabled = true;
+                printButton.textContent = 'Memuat...';
+
+                try {
+                    const fullOrder = await AdminStore.api.fetchOrderDetail(orderNumber);
+                    AdminUi.printReceipt(fullOrder);
+                } catch (error) {
+                    window.alert(error.message || 'Gagal mengambil rincian pesanan untuk dicetak.');
+                } finally {
+                    printButton.disabled = false;
+                    printButton.textContent = originalLabel;
+                }
+                return;
+            }
+
             const actionButton = event.target.closest('[data-order-action]');
             if (!actionButton) {
                 return;
@@ -333,22 +356,19 @@ function getTransactionItems(transaction) {
 
 function renderTransactionActions(transaction) {
     const status = String(transaction.status || 'received').toLowerCase();
+    const orderNumber = escapeHtml(transaction.orderNumber || '');
 
+    let statusButton = '';
     if (status === 'received') {
-        return `
-            <div class="admin-transaction-action-group">
-                <button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${escapeHtml(transaction.orderNumber || '')}">Proses</button>
-            </div>
-        `;
+        statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Proses</button>`;
+    } else if (status === 'preparing') {
+        statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Siap Diambil</button>`;
     }
 
-    if (status === 'preparing') {
-        return `
-            <div class="admin-transaction-action-group">
-                <button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${escapeHtml(transaction.orderNumber || '')}">Siap Diambil</button>
-            </div>
-        `;
-    }
-
-    return '';
+    return `
+        <div class="admin-transaction-action-group">
+            <button type="button" class="admin-transaction-action is-print" data-order-print="${orderNumber}">Cetak Struk</button>
+            ${statusButton}
+        </div>
+    `;
 }

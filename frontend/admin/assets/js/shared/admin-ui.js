@@ -390,6 +390,286 @@ function renderAdminPanelHead(currentPage = '') {
     `.trim();
 }
 
+function printReceipt(order) {
+    if (!order) return;
+
+    // Create a temporary hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+
+    // Build items HTML
+    const items = Array.isArray(order.items) ? order.items : [];
+    let itemsHtml = '';
+    
+    if (items.length > 0) {
+        itemsHtml = items.map(item => {
+            const name = item.menuName || item.name || '-';
+            const qty = item.qty || 1;
+            const price = Number(item.unitPrice || 0);
+            const lineTotal = Number(item.lineTotal || (qty * price));
+            const sizeSuffix = item.sizeLabel ? ` (${item.sizeLabel})` : '';
+            const noteSuffix = item.note ? `<div class="item-note">Catatan: ${escapeHtml(item.note)}</div>` : '';
+            
+            return `
+                <tr class="item-row">
+                    <td>
+                        <div>${escapeHtml(name)}${escapeHtml(sizeSuffix)}</div>
+                        <div style="font-size: 8px; color: #555;">${qty} x ${formatCurrency(price)}</div>
+                        ${noteSuffix}
+                    </td>
+                    <td class="text-right" style="vertical-align: bottom;">${formatCurrency(lineTotal)}</td>
+                </tr>
+            `;
+        }).join('');
+    } else if (order.itemSummary) {
+        // Fallback for summary string (e.g. 1x Caramel Latte (M) | 2x Espresso)
+        const summaryItems = order.itemSummary.split('|').map(s => s.trim()).filter(Boolean);
+        itemsHtml = summaryItems.map(item => `
+            <tr class="item-row">
+                <td>${escapeHtml(item)}</td>
+                <td class="text-right">-</td>
+            </tr>
+        `).join('');
+    }
+
+    const orderNumber = order.orderNumber || order.code || '-';
+    
+    // Formatting date and time
+    let formattedDate = '-';
+    if (order.createdAt) {
+        const d = new Date(order.createdAt);
+        if (!isNaN(d.getTime())) {
+            formattedDate = new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(d);
+        }
+    } else if (order.date) {
+        formattedDate = `${order.date} ${order.time || ''}`.trim();
+    }
+
+    const subtotal = Number(order.subtotal || 0);
+    const serviceFee = Number(order.serviceFee || 0);
+    const taxAmount = Number(order.taxAmount || 0);
+    const discountAmount = Number(order.discountAmount || 0);
+    const total = Number(order.total || 0);
+    const tableNumber = order.tableNumber || order.table || '-';
+    const customerName = order.customerName || order.customer || '-';
+    const paymentMethod = String(order.paymentMethod || order.payment || '-').toUpperCase();
+    
+    let paymentStatus = 'BELUM LUNAS';
+    const rawStatus = String(order.paymentStatus || '').toLowerCase();
+    if (paymentMethod === 'QRIS') {
+        if (rawStatus === 'paid') paymentStatus = 'LUNAS (QRIS)';
+        else if (rawStatus === 'failed') paymentStatus = 'GAGAL';
+        else paymentStatus = 'BELUM BAYAR';
+    } else {
+        if (rawStatus === 'paid') paymentStatus = 'LUNAS (TUNAI)';
+        else paymentStatus = 'BELUM LUNAS';
+    }
+
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Struk Pembelian</title>
+            <style>
+                @page {
+                    size: 58mm auto;
+                    margin: 0;
+                }
+                body {
+                    width: 48mm;
+                    margin: 0 auto;
+                    padding: 8px 0;
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 9px;
+                    line-height: 1.3;
+                    color: #000;
+                    background: #fff;
+                }
+                .text-center {
+                    text-align: center;
+                }
+                .text-right {
+                    text-align: right;
+                }
+                .bold {
+                    font-weight: bold;
+                }
+                .header {
+                    margin-bottom: 6px;
+                }
+                .store-name {
+                    font-size: 11px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                }
+                .separator {
+                    border-top: 1px dashed #000;
+                    margin: 4px 0;
+                }
+                .info-table, .items-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .info-table td, .items-table td {
+                    padding: 1px 0;
+                    vertical-align: top;
+                }
+                .item-row td {
+                    padding-top: 3px;
+                }
+                .item-note {
+                    font-size: 8px;
+                    padding-left: 6px;
+                    font-style: italic;
+                }
+                .total-row td {
+                    font-weight: bold;
+                    padding-top: 3px;
+                }
+                .footer {
+                    margin-top: 10px;
+                    font-size: 8px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header text-center">
+                <div class="store-name">UNCLE JOE</div>
+                <div>QR ORDERING SYSTEM</div>
+                <div class="separator"></div>
+            </div>
+            
+            <table class="info-table">
+                <tr>
+                    <td>Order:</td>
+                    <td class="text-right bold">${escapeHtml(orderNumber)}</td>
+                </tr>
+                <tr>
+                    <td>Tanggal:</td>
+                    <td class="text-right">${escapeHtml(formattedDate)}</td>
+                </tr>
+                <tr>
+                    <td>Meja:</td>
+                    <td class="text-right bold">${escapeHtml(tableNumber)}</td>
+                </tr>
+                <tr>
+                    <td>Customer:</td>
+                    <td class="text-right">${escapeHtml(customerName)}</td>
+                </tr>
+            </table>
+            
+            <div class="separator"></div>
+            
+            <table class="items-table">
+                <thead>
+                    <tr class="bold">
+                        <td>Item</td>
+                        <td class="text-right" style="width: 30%;">Total</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+            
+            <div class="separator"></div>
+            
+            <table class="info-table">
+                <tr>
+                    <td>Subtotal:</td>
+                    <td class="text-right">${formatCurrency(subtotal)}</td>
+                </tr>
+                ${serviceFee > 0 ? `
+                <tr>
+                    <td>B. Layanan:</td>
+                    <td class="text-right">${formatCurrency(serviceFee)}</td>
+                </tr>` : ''}
+                ${taxAmount > 0 ? `
+                <tr>
+                    <td>Pajak (10%):</td>
+                    <td class="text-right">${formatCurrency(taxAmount)}</td>
+                </tr>` : ''}
+                ${discountAmount > 0 ? `
+                <tr>
+                    <td>Diskon:</td>
+                    <td class="text-right">-${formatCurrency(discountAmount)}</td>
+                </tr>` : ''}
+                <tr class="total-row">
+                    <td>TOTAL:</td>
+                    <td class="text-right">${formatCurrency(total)}</td>
+                </tr>
+            </table>
+            
+            <div class="separator"></div>
+            
+            <table class="info-table">
+                <tr>
+                    <td>Metode:</td>
+                    <td class="text-right bold">${escapeHtml(paymentMethod)}</td>
+                </tr>
+                <tr>
+                    <td>Status:</td>
+                    <td class="text-right bold">${escapeHtml(paymentStatus)}</td>
+                </tr>
+            </table>
+            
+            <div class="separator"></div>
+            
+            <div class="footer text-center">
+                <div>Terima Kasih Atas Kunjungan Anda</div>
+                <div>Uncle Joe QR Ordering</div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Trigger print
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+        iframe.contentWindow.print();
+        // Remove iframe after print dialog completes
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 1000);
+    }, 250);
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0
+        }).format(val).replace(/\s/g, ''); // strip spacing
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+}
+
 function initAdminIcons() {
     document.querySelectorAll('[data-admin-icon]').forEach((element) => {
         const iconMarkup = ADMIN_ICONS[element.dataset.adminIcon];
@@ -406,4 +686,7 @@ window.AdminUi = {
     renderAdminPageHeader,
     renderAdminPanelHead,
     initAdminIcons,
+    printReceipt,
 };
+
+

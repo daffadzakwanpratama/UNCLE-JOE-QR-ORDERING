@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         periodCard: document.getElementById('reportPeriodCard'),
         detailModal: document.getElementById('reportDetailModal'),
         detailCloseButton: document.getElementById('reportDetailCloseButton'),
+        detailPrintButton: document.getElementById('reportDetailPrintButton'),
         detailTitle: document.getElementById('reportDetailTitle'),
         detailSubtitle: document.getElementById('reportDetailSubtitle'),
         detailGrid: document.getElementById('reportDetailGrid'),
@@ -53,6 +54,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         elements.detailCloseButton?.addEventListener('click', () => closeDetailModal(elements));
+        elements.detailPrintButton?.addEventListener('click', () => {
+            if (elements.currentDetail) {
+                AdminUi.printReceipt(elements.currentDetail);
+            }
+        });
         elements.detailModal?.addEventListener('click', (event) => {
             if (event.target === elements.detailModal) {
                 closeDetailModal(elements);
@@ -369,6 +375,7 @@ async function openDetailModal(elements, transaction) {
         }
     }
 
+    elements.currentDetail = detail;
     elements.detailModal.classList.remove('is-hidden');
     elements.detailModal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('admin-modal-open');
@@ -377,6 +384,7 @@ async function openDetailModal(elements, transaction) {
 function closeDetailModal(elements) {
     if (!elements.detailModal) return;
 
+    elements.currentDetail = null;
     elements.detailModal.classList.add('is-hidden');
     elements.detailModal.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('admin-modal-open');
