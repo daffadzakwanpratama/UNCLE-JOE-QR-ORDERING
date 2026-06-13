@@ -18,7 +18,7 @@ function parseAllowedOrigins() {
 function validateCorsConfiguration() {
   const rawValue = String(process.env.FRONTEND_ORIGIN || "").trim();
 
-  if (isProduction() && (!rawValue || rawValue === "*")) {
+  if (isProduction() && !process.env.VERCEL && (!rawValue || rawValue === "*")) {
     throw new Error(
       "FRONTEND_ORIGIN wajib diisi dengan domain frontend yang spesifik saat NODE_ENV=production."
     );
