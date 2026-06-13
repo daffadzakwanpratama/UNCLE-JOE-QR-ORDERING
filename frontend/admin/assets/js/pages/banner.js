@@ -67,13 +67,40 @@ class BannerPage {
         });
     }
 
+    getLocalDateString(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    getBannerStatus(banner) {
+        const isActive = Boolean(Number(banner.isActive) || banner.isActive);
+        if (!isActive) return 'inactive';
+
+        const todayStr = this.getLocalDateString(new Date());
+        const startDateStr = banner.startDate ? this.getLocalDateString(banner.startDate) : null;
+        const endDateStr = banner.endDate ? this.getLocalDateString(banner.endDate) : null;
+
+        if (startDateStr && startDateStr > todayStr) {
+            return 'scheduled';
+        }
+        if (endDateStr && endDateStr < todayStr) {
+            return 'inactive';
+        }
+        return 'active';
+    }
+
     render() {
         this.renderSummary();
         this.renderTable();
     }
 
     renderSummary() {
-        const activeBanners = this.banners.filter((banner) => Boolean(Number(banner.isActive) || banner.isActive)).length;
+        const activeBanners = this.banners.filter((banner) => this.getBannerStatus(banner) === 'active').length;
         if (this.totalCount) this.totalCount.textContent = String(this.banners.length);
         if (this.activeCount) this.activeCount.textContent = String(activeBanners);
         if (this.inactiveCount) this.inactiveCount.textContent = String(this.banners.length - activeBanners);
@@ -83,12 +110,11 @@ class BannerPage {
         const selectedStatus = this.statusFilter?.value || 'all';
 
         return this.banners.filter((banner) => {
-            const isActive = Boolean(Number(banner.isActive) || banner.isActive);
-            const isScheduled = !isActive && banner.startDate && new Date(banner.startDate) > new Date();
+            const status = this.getBannerStatus(banner);
 
-            if (selectedStatus === 'active') return isActive;
-            if (selectedStatus === 'inactive') return !isActive;
-            if (selectedStatus === 'scheduled') return isScheduled;
+            if (selectedStatus === 'active') return status === 'active';
+            if (selectedStatus === 'inactive') return status === 'inactive';
+            if (selectedStatus === 'scheduled') return status === 'scheduled';
             return true;
         });
     }
@@ -112,9 +138,17 @@ class BannerPage {
         }
 
         this.tableBody.innerHTML = banners.map((banner) => {
-            const isActive = Boolean(Number(banner.isActive) || banner.isActive);
-            const statusLabel = isActive ? 'Aktif' : 'Nonaktif';
-            const statusClass = isActive ? 'is-success' : 'is-muted';
+            const status = this.getBannerStatus(banner);
+            let statusLabel = 'Aktif';
+            let statusClass = 'is-success';
+
+            if (status === 'inactive') {
+                statusLabel = 'Nonaktif';
+                statusClass = 'is-muted';
+            } else if (status === 'scheduled') {
+                statusLabel = 'Terjadwal';
+                statusClass = 'is-warning';
+            }
 
             return `
                 <tr>

@@ -1635,6 +1635,13 @@ html, body {
     color: #34d399;
 }
 
+.admin-status-badge.is-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.28);
+    color: #fbbf24;
+}
+
+
 @keyframes pulse-received {
 
     0%,
