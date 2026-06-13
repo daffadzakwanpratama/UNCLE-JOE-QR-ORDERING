@@ -3,6 +3,14 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+// Clean process.env from surrounding quotes (common issue in cloud panels)
+for (const key of Object.keys(process.env)) {
+  const value = process.env[key];
+  if (typeof value === "string") {
+    process.env[key] = value.trim().replace(/^["']|["']$/g, "");
+  }
+}
+
 let poolInstance;
 let wrappedPoolInstance;
 
