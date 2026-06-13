@@ -268,7 +268,6 @@ function renderDetailPage() {
 
     <section class="detail-action-bar">
       <button class="detail-add-button" type="button" id="addToCartButton">
-        <span class="detail-add-icon" aria-hidden="true">&#128717;</span>
         <span>Tambah ke Keranjang${priceTextButton}</span>
       </button>
     </section>
@@ -308,7 +307,6 @@ function refreshDetailActionPrice(item) {
     : '';
 
   button.innerHTML = `
-    <span class="detail-add-icon" aria-hidden="true">&#128717;</span>
     <span>Tambah ke Keranjang${priceTextButton}</span>
   `;
 }

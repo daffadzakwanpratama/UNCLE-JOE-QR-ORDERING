@@ -2261,7 +2261,7 @@ a {
 }
 
 .search-price {
-  color: var(--heading);
+  color: var(--accent);
   font-size: 1.05rem;
   font-weight: 800;
 }
