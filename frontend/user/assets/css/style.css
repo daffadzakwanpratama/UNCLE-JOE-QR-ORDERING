@@ -2211,24 +2211,24 @@ a {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   align-content: stretch;
-  gap: 0.9rem;
-  padding: 1rem 1rem 1.05rem;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem 0.85rem;
 }
 
 .search-menu-copy {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 0.15rem;
+  gap: 0.1rem;
   min-width: 0;
 }
 
 .search-menu-copy h3 {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.2rem;
   color: var(--heading);
-  font-size: 1.05rem;
-  line-height: 1.28;
-  min-height: 2.7rem;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  min-height: auto;
 }
 
 .search-rating-row {
