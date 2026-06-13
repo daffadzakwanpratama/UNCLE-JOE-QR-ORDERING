@@ -283,3 +283,78 @@ window.AdminStore = {
         updateOrderPaymentStatus: window.AdminApi?.updateOrderPaymentStatus,
     },
 };
+
+function showAdminConfirm(title, message) {
+    return new Promise((resolve) => {
+        const escape = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-admin-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="custom-admin-dialog-box">
+                <h3 class="custom-admin-dialog-title">${escape(title)}</h3>
+                <p class="custom-admin-dialog-message">${escape(message)}</p>
+                <div class="custom-admin-dialog-actions">
+                    <button class="custom-admin-dialog-btn btn-cancel" id="adminDialogCancelBtn">Batal</button>
+                    <button class="custom-admin-dialog-btn btn-confirm" id="adminDialogConfirmBtn">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.classList.add('is-visible');
+        });
+
+        const cleanup = (result) => {
+            overlay.classList.remove('is-visible');
+            setTimeout(() => {
+                overlay.remove();
+                resolve(result);
+            }, 250);
+        };
+
+        overlay.querySelector('#adminDialogCancelBtn').addEventListener('click', () => cleanup(false));
+        overlay.querySelector('#adminDialogConfirmBtn').addEventListener('click', () => cleanup(true));
+    });
+}
+
+function showAdminAlert(title, message) {
+    return new Promise((resolve) => {
+        const escape = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-admin-dialog-overlay';
+        overlay.innerHTML = `
+            <div class="custom-admin-dialog-box">
+                <h3 class="custom-admin-dialog-title">${escape(title)}</h3>
+                <p class="custom-admin-dialog-message">${escape(message)}</p>
+                <div class="custom-admin-dialog-actions">
+                    <button class="custom-admin-dialog-btn btn-confirm" id="adminDialogOkBtn" style="width: 100%;">OK</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.classList.add('is-visible');
+        });
+
+        const cleanup = () => {
+            overlay.classList.remove('is-visible');
+            setTimeout(() => {
+                overlay.remove();
+                resolve();
+            }, 250);
+        };
+
+        overlay.querySelector('#adminDialogOkBtn').addEventListener('click', cleanup);
+    });
+}
+
+window.showAdminConfirm = showAdminConfirm;
+window.showAdminAlert = showAdminAlert;

@@ -250,8 +250,8 @@ function renderStatusPage() {
       onPending: function (result) {
         window.location.reload();
       },
-      onError: function (result) {
-        alert("Pembayaran gagal!");
+      onError: async function (result) {
+        await showCustomAlert("Pembayaran Gagal", "Proses pembayaran Anda tidak dapat diselesaikan.");
       },
       onClose: function () {
         // Popup ditutup oleh pengguna
@@ -262,7 +262,10 @@ function renderStatusPage() {
   if (isQris && !isPaid) {
     document.getElementById("payNowPrimaryButton")?.addEventListener("click", triggerMidtransSnap);
     document.getElementById("switchPayCashButton")?.addEventListener("click", async () => {
-      const confirmed = window.confirm("Apakah Anda yakin ingin mengubah metode pembayaran ke Kasir? Anda harus melunasi pesanan secara tunai langsung ke meja kasir.");
+      const confirmed = await showCustomConfirm(
+        "Metode Pembayaran",
+        "Apakah Anda yakin ingin mengubah metode pembayaran ke Kasir? Anda harus melunasi pesanan secara tunai langsung ke meja kasir."
+      );
       if (!confirmed) return;
 
       try {
@@ -277,7 +280,7 @@ function renderStatusPage() {
         }
         window.location.reload();
       } catch (err) {
-        alert(err.message || "Gagal mengubah metode pembayaran.");
+        await showCustomAlert("Gagal Mengubah", err.message || "Gagal mengubah metode pembayaran.");
       }
     });
   } else {

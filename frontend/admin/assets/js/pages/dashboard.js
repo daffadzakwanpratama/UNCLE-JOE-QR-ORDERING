@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const fullOrder = await AdminStore.api.fetchOrderDetail(orderNumber);
                     AdminUi.printReceipt(fullOrder);
                 } catch (error) {
-                    window.alert(error.message || 'Gagal mengambil rincian pesanan untuk dicetak.');
+                    await showAdminAlert('Rincian Pesanan', error.message || 'Gagal mengambil rincian pesanan untuk dicetak.');
                 } finally {
                     printButton.disabled = false;
                     printButton.textContent = originalLabel;
@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const orderNumber = payButton.dataset.orderPay || '';
                 if (!orderNumber) return;
 
-                const confirmed = window.confirm(`Konfirmasi pembayaran lunas untuk pesanan ${orderNumber}?`);
+                const confirmed = await showAdminConfirm(
+                    'Konfirmasi Pelunasan',
+                    `Konfirmasi pembayaran lunas untuk pesanan ${orderNumber}?`
+                );
                 if (!confirmed) return;
 
                 const originalLabel = payButton.textContent;
@@ -82,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } catch (error) {
                     payButton.disabled = false;
                     payButton.textContent = originalLabel;
-                    window.alert(error.message || 'Gagal memperbarui status pembayaran.');
+                    await showAdminAlert('Gagal Memperbarui', error.message || 'Gagal memperbarui status pembayaran.');
                 }
                 return;
             }
@@ -126,13 +129,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        clearButton?.addEventListener('click', () => {
+        clearButton?.addEventListener('click', async () => {
             const visibleOrders = getVisibleDashboardOrders(orders);
             if (!visibleOrders.length) {
                 return;
             }
 
-            const confirmed = window.confirm('Clear transaksi hanya akan mengosongkan daftar di dashboard. Data laporan tetap tersimpan. Lanjutkan?');
+            const confirmed = await showAdminConfirm(
+                'Bersihkan Dashboard',
+                'Clear transaksi hanya akan mengosongkan daftar di dashboard. Data laporan tetap tersimpan. Lanjutkan?'
+            );
             if (!confirmed) {
                 return;
             }

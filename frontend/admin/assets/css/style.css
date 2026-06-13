@@ -2769,3 +2769,97 @@ html, body {
     border: 1px solid rgba(239, 68, 68, 0.28);
     color: #f87171;
 }
+
+/* Custom Alert/Confirm dialog styles for Admin Panel (sleek Dark Mode) */
+.custom-admin-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.22s var(--ease-out);
+}
+
+.custom-admin-dialog-overlay.is-visible {
+    opacity: 1;
+}
+
+.custom-admin-dialog-box {
+    background: #151515;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--r-md);
+    width: 90%;
+    max-width: 380px;
+    padding: 24px;
+    box-shadow: var(--shadow-xl);
+    transform: scale(0.94);
+    transition: transform 0.22s var(--ease-spring);
+}
+
+.custom-admin-dialog-overlay.is-visible .custom-admin-dialog-box {
+    transform: scale(1);
+}
+
+.custom-admin-dialog-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+}
+
+.custom-admin-dialog-message {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.custom-admin-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.custom-admin-dialog-btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: var(--r-xs);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--t-fast) var(--ease-out), transform 0.1s ease;
+}
+
+.custom-admin-dialog-btn:active {
+    transform: scale(0.97);
+}
+
+.custom-admin-dialog-btn.btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.custom-admin-dialog-btn.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.custom-admin-dialog-btn.btn-confirm {
+    background: #10b981;
+    color: #ffffff;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.custom-admin-dialog-btn.btn-confirm:hover {
+    background: #059669;
+}

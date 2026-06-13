@@ -355,4 +355,71 @@ async function fetchOrderByNumber(orderNumber) {
   return window.UserApi.fetchOrderByNumber(orderNumber);
 }
 
+function showCustomConfirm(title, message) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "custom-dialog-overlay";
+    overlay.innerHTML = `
+      <div class="custom-dialog-box">
+        <h3 class="custom-dialog-title">${escapeHTML(title)}</h3>
+        <p class="custom-dialog-message">${escapeHTML(message)}</p>
+        <div class="custom-dialog-actions">
+          <button class="custom-dialog-btn btn-cancel" id="customDialogCancelBtn">Batal</button>
+          <button class="custom-dialog-btn btn-confirm" id="customDialogConfirmBtn">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.classList.add("is-visible");
+    });
+
+    const cleanup = (result) => {
+      overlay.classList.remove("is-visible");
+      setTimeout(() => {
+        overlay.remove();
+        resolve(result);
+      }, 250);
+    };
+
+    overlay.querySelector("#customDialogCancelBtn").addEventListener("click", () => cleanup(false));
+    overlay.querySelector("#customDialogConfirmBtn").addEventListener("click", () => cleanup(true));
+  });
+}
+
+function showCustomAlert(title, message) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "custom-dialog-overlay";
+    overlay.innerHTML = `
+      <div class="custom-dialog-box">
+        <h3 class="custom-dialog-title">${escapeHTML(title)}</h3>
+        <p class="custom-dialog-message">${escapeHTML(message)}</p>
+        <div class="custom-dialog-actions">
+          <button class="custom-dialog-btn btn-confirm" id="customDialogOkBtn" style="width: 100%;">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.classList.add("is-visible");
+    });
+
+    const cleanup = () => {
+      overlay.classList.remove("is-visible");
+      setTimeout(() => {
+        overlay.remove();
+        resolve();
+      }, 250);
+    };
+
+    overlay.querySelector("#customDialogOkBtn").addEventListener("click", cleanup);
+  });
+}
+
+window.showCustomConfirm = showCustomConfirm;
+window.showCustomAlert = showCustomAlert;
+
 syncActiveTableFromLocation();
