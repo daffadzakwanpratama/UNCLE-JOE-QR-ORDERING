@@ -234,7 +234,8 @@ function renderStatusPage() {
 
     <section class="status-action-area">
       ${isQris && !isPaid
-        ? `<button class="status-complete-button" type="button" id="payNowPrimaryButton">Bayar Sekarang</button>`
+        ? `<button class="status-complete-button" type="button" id="payNowPrimaryButton">Bayar Sekarang</button>
+           <button class="status-secondary-button" type="button" id="switchPayCashButton">Bayar di Kasir (Tunai)</button>`
         : `<button class="status-complete-button" type="button" id="completeOrderButton">Pesanan Telah Diterima</button>`
       }
     </section>
@@ -260,6 +261,25 @@ function renderStatusPage() {
 
   if (isQris && !isPaid) {
     document.getElementById("payNowPrimaryButton")?.addEventListener("click", triggerMidtransSnap);
+    document.getElementById("switchPayCashButton")?.addEventListener("click", async () => {
+      const confirmed = window.confirm("Apakah Anda yakin ingin mengubah metode pembayaran ke Kasir? Anda harus melunasi pesanan secara tunai langsung ke meja kasir.");
+      if (!confirmed) return;
+
+      try {
+        await window.UserApi.changeOrderPaymentMethod(order.orderNumber, "cash");
+        const activeOrder = getActiveOrder();
+        if (activeOrder) {
+          if (!activeOrder.meta) {
+            activeOrder.meta = {};
+          }
+          activeOrder.meta.paymentMethod = "cash";
+          saveActiveOrder(activeOrder);
+        }
+        window.location.reload();
+      } catch (err) {
+        alert(err.message || "Gagal mengubah metode pembayaran.");
+      }
+    });
   } else {
     document.getElementById("completeOrderButton")?.addEventListener("click", () => {
       clearActiveOrder();

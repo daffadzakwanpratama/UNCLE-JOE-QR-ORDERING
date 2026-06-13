@@ -280,5 +280,6 @@ window.AdminStore = {
         deleteDiscount: window.AdminApi?.deleteDiscount,
         fetchReportSummary: window.AdminApi?.fetchReportSummary,
         fetchReportTransactions: window.AdminApi?.fetchReportTransactions,
+        updateOrderPaymentStatus: window.AdminApi?.updateOrderPaymentStatus,
     },
 };

@@ -92,7 +92,7 @@ async function generateReadableOrderNumber(connection, date = new Date()) {
 }
 
 function isDuplicateOrderNumberError(error) {
-  return error?.code === "ER_DUP_ENTRY" || error?.errno === 1062;
+  return error?.code === "ER_DUP_ENTRY" || error?.errno === 1062 || error?.code === "23505";
 }
 
 router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
@@ -331,6 +331,99 @@ router.patch("/:orderNumber/status", requireAdminAuth, asyncHandler(async (reque
       orderNumber: order.orderNumber,
       previousStatus: currentStatus,
       status: nextStatus,
+    },
+  });
+}));
+
+router.patch("/:orderNumber/payment-method", asyncHandler(async (request, response) => {
+  const orderNumber = requireNonEmptyString(request.params.orderNumber, "Order number wajib diisi.", { maxLength: 30 });
+  const { paymentMethod } = request.body || {};
+  const normalizedPaymentMethod = requireNonEmptyString(paymentMethod, "Metode pembayaran wajib diisi.", { maxLength: 30 });
+
+  if (normalizedPaymentMethod.toLowerCase() !== "cash") {
+    return response.status(400).json({
+      success: false,
+      message: "Hanya perpindahan ke metode pembayaran tunai yang didukung saat ini.",
+    });
+  }
+
+  const orders = await query(
+    `SELECT id, order_number, payment_status, payment_method FROM orders WHERE order_number = :orderNumber LIMIT 1`,
+    { orderNumber }
+  );
+  const order = orders[0];
+
+  if (!order) {
+    return response.status(404).json({
+      success: false,
+      message: "Order tidak ditemukan.",
+    });
+  }
+
+  if (String(order.paymentStatus).toLowerCase() === "paid") {
+    return response.status(400).json({
+      success: false,
+      message: "Pesanan sudah dibayar, metode pembayaran tidak bisa diubah.",
+    });
+  }
+
+  await query(
+    `UPDATE orders SET payment_method = :paymentMethod WHERE id = :id`,
+    {
+      paymentMethod: normalizedPaymentMethod,
+      id: order.id,
+    }
+  );
+
+  response.json({
+    success: true,
+    message: "Metode pembayaran berhasil diubah menjadi tunai.",
+    data: {
+      orderNumber,
+      paymentMethod: normalizedPaymentMethod,
+    },
+  });
+}));
+
+router.patch("/:orderNumber/payment-status", requireAdminAuth, asyncHandler(async (request, response) => {
+  const orderNumber = requireNonEmptyString(request.params.orderNumber, "Order number wajib diisi.", { maxLength: 30 });
+  const { paymentStatus } = request.body || {};
+  const normalizedPaymentStatus = requireNonEmptyString(paymentStatus, "Status pembayaran wajib diisi.", { maxLength: 30 });
+
+  if (!["paid", "pending", "failed"].includes(normalizedPaymentStatus.toLowerCase())) {
+    return response.status(400).json({
+      success: false,
+      message: "Status pembayaran tidak valid.",
+    });
+  }
+
+  const orders = await query(
+    `SELECT id, order_number FROM orders WHERE order_number = :orderNumber LIMIT 1`,
+    { orderNumber }
+  );
+  const order = orders[0];
+
+  if (!order) {
+    return response.status(404).json({
+      success: false,
+      message: "Order tidak ditemukan.",
+    });
+  }
+
+  await query(
+    `UPDATE orders SET payment_status = :paymentStatus WHERE id = :id`,
+    {
+      paymentStatus: normalizedPaymentStatus,
+      id: order.id,
+    }
+  );
+
+  response.json({
+    success: true,
+    message: "Status pembayaran berhasil diperbarui.",
+    data: {
+      orderNumber,
+      paymentStatus: normalizedPaymentStatus,
     },
   });
 }));

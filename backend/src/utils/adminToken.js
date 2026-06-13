@@ -67,10 +67,14 @@ function verifyAdminToken(token) {
   }
 
   const expectedSignature = signValue(encodedPayload);
-  const signaturesMatch = crypto.timingSafeEqual(
-    Buffer.from(receivedSignature),
-    Buffer.from(expectedSignature)
-  );
+  const expectedBuffer = Buffer.from(expectedSignature);
+  const receivedBuffer = Buffer.from(receivedSignature);
+
+  if (expectedBuffer.length !== receivedBuffer.length) {
+    throw new Error("Token admin tidak valid.");
+  }
+
+  const signaturesMatch = crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
 
   if (!signaturesMatch) {
     throw new Error("Token admin tidak valid.");

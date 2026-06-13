@@ -1,4 +1,5 @@
 const DASHBOARD_CLEARED_ORDERS_KEY = 'qr-admin-dashboard-cleared-orders';
+let searchQuery = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await AdminStore.waitUntilReady?.();
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const adminUsername = document.getElementById('dashboardAdminUsername');
     const transactionList = document.getElementById('dashboardTransactionList');
     const clearButton = document.getElementById('clearDashboardTransactionsButton');
+    const searchInput = document.getElementById('dashboardOrderSearchInput');
 
     if (adminUsername && session?.username) adminUsername.textContent = session.username;
 
@@ -58,6 +60,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            const payButton = event.target.closest('[data-order-pay]');
+            if (payButton) {
+                const orderNumber = payButton.dataset.orderPay || '';
+                if (!orderNumber) return;
+
+                const confirmed = window.confirm(`Konfirmasi pembayaran lunas untuk pesanan ${orderNumber}?`);
+                if (!confirmed) return;
+
+                const originalLabel = payButton.textContent;
+                payButton.disabled = true;
+                payButton.textContent = 'Memproses...';
+
+                try {
+                    await AdminStore.api.updateOrderPaymentStatus(orderNumber, 'paid');
+                    const order = orders.find((item) => item.orderNumber === orderNumber);
+                    if (order) {
+                        order.paymentStatus = 'paid';
+                    }
+                    renderTransactionList(transactionList, orders);
+                } catch (error) {
+                    payButton.disabled = false;
+                    payButton.textContent = originalLabel;
+                    window.alert(error.message || 'Gagal memperbarui status pembayaran.');
+                }
+                return;
+            }
+
             const actionButton = event.target.closest('[data-order-action]');
             if (!actionButton) {
                 return;
@@ -89,6 +118,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.alert(error.message || 'Gagal memperbarui status pesanan.');
             }
         });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (event) => {
+                searchQuery = String(event.target.value || '').trim().toUpperCase();
+                renderTransactionList(transactionList, orders);
+            });
+        }
 
         clearButton?.addEventListener('click', () => {
             const visibleOrders = getVisibleDashboardOrders(orders);
@@ -126,12 +162,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function renderTransactionList(container, orders) {
     const visibleOrders = getVisibleDashboardOrders(orders);
+    const isSearchResult = typeof searchQuery !== 'undefined' && searchQuery;
 
     if (!visibleOrders.length) {
         container.innerHTML = `
             <div class="admin-empty-state">
-                <strong>Dashboard transaksi kosong</strong>
-                <p>Daftar transaksi di dashboard sudah dibersihkan. Data lengkapnya tetap ada di halaman laporan.</p>
+                <strong>${isSearchResult ? 'Pesanan tidak ditemukan' : 'Dashboard transaksi kosong'}</strong>
+                <p>${isSearchResult ? 'Periksa kembali kode pesanan atau nama pelanggan yang Anda cari.' : 'Daftar transaksi di dashboard sudah dibersihkan. Data lengkapnya tetap ada di halaman laporan.'}</p>
             </div>
         `;
         return;
@@ -212,6 +249,13 @@ function renderTransactionList(container, orders) {
 }
 
 function getVisibleDashboardOrders(orders) {
+    if (typeof searchQuery !== 'undefined' && searchQuery) {
+        return orders.filter((transaction) => 
+            String(transaction.orderNumber || '').toUpperCase().includes(searchQuery) ||
+            String(transaction.customerName || '').toUpperCase().includes(searchQuery)
+        );
+    }
+
     const hiddenOrderNumbers = new Set(getClearedDashboardOrderNumbers());
     return orders
         .filter((transaction) => !hiddenOrderNumbers.has(transaction.orderNumber))
@@ -356,6 +400,7 @@ function getTransactionItems(transaction) {
 
 function renderTransactionActions(transaction) {
     const status = String(transaction.status || 'received').toLowerCase();
+    const paymentStatus = String(transaction.paymentStatus || 'pending').toLowerCase();
     const orderNumber = escapeHtml(transaction.orderNumber || '');
 
     let statusButton = '';
@@ -365,9 +410,15 @@ function renderTransactionActions(transaction) {
         statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Siap Diambil</button>`;
     }
 
+    let payButton = '';
+    if (paymentStatus !== 'paid' && status !== 'cancelled') {
+        payButton = `<button type="button" class="admin-transaction-action is-pay" data-order-pay="${orderNumber}">Selesai Bayar</button>`;
+    }
+
     return `
         <div class="admin-transaction-action-group">
             <button type="button" class="admin-transaction-action is-print" data-order-print="${orderNumber}">Cetak Struk</button>
+            ${payButton}
             ${statusButton}
         </div>
     `;

@@ -3,28 +3,43 @@ function mapDatabaseError(error) {
     return null;
   }
 
-  if (error.code === "ER_DUP_ENTRY") {
+  const code = String(error.code || "");
+
+  if (code === "ER_DUP_ENTRY" || code === "23505") {
     return {
       statusCode: 409,
       message: "Data yang sama sudah ada. Gunakan nilai yang berbeda.",
     };
   }
 
-  if (error.code === "ER_NO_REFERENCED_ROW_2") {
+  if (
+    code === "ER_NO_REFERENCED_ROW_2" ||
+    (code === "23503" && error.detail && error.detail.includes("is not present in table"))
+  ) {
     return {
       statusCode: 400,
       message: "Data referensi tidak ditemukan atau belum tersedia.",
     };
   }
 
-  if (error.code === "ER_ROW_IS_REFERENCED_2") {
+  if (
+    code === "ER_ROW_IS_REFERENCED_2" ||
+    (code === "23503" && error.detail && error.detail.includes("is still referenced from table"))
+  ) {
     return {
       statusCode: 409,
       message: "Data ini masih terhubung dengan data lain dan belum bisa dihapus.",
     };
   }
 
-  if (error.code === "ER_BAD_NULL_ERROR") {
+  if (code === "23503") {
+    return {
+      statusCode: 409,
+      message: "Pelanggaran relasi data (foreign key constraint).",
+    };
+  }
+
+  if (code === "ER_BAD_NULL_ERROR" || code === "23502") {
     return {
       statusCode: 400,
       message: "Masih ada field wajib yang belum diisi.",

@@ -1,4 +1,4 @@
-USE qr_ordering;
+-- USE qr_ordering;
 
 INSERT INTO admins (username, full_name, password_hash, role)
 SELECT

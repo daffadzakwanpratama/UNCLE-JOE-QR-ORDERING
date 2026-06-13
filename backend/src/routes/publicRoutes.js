@@ -171,4 +171,14 @@ router.get("/discounts/validate/:code", asyncHandler(async (request, response) =
   });
 }));
 
+router.get("/config/midtrans", (request, response) => {
+  response.json({
+    success: true,
+    data: {
+      clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
+      isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+    },
+  });
+});
+
 module.exports = router;

@@ -1571,6 +1571,16 @@ html, body {
     color: #0a0a0a;
 }
 
+.admin-transaction-action.is-pay {
+    background: #10b981;
+    color: #ffffff;
+    border-color: rgba(16, 185, 129, 0.28);
+}
+
+.admin-transaction-action.is-pay:hover {
+    background: #059669;
+}
+
 .admin-primary-button:hover {
     transform: translateY(-1px);
     opacity: 0.92;

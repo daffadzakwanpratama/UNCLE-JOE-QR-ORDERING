@@ -187,6 +187,14 @@ async function fetchReportTransactionsFromApi(month = "") {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
+async function updateOrderPaymentStatusFromApi(orderNumber, paymentStatus) {
+  const payload = await getAdminApiClient().request(`/orders/${encodeURIComponent(orderNumber)}/payment-status`, {
+    method: "PATCH",
+    body: JSON.stringify({ paymentStatus }),
+  });
+  return payload.data;
+}
+
 window.AdminApi = {
   loginAdmin: loginAdminWithApi,
   fetchAdminSession: fetchAdminSessionFromApi,
@@ -212,4 +220,5 @@ window.AdminApi = {
   deleteDiscount: deleteDiscountWithApi,
   fetchReportSummary: fetchReportSummaryFromApi,
   fetchReportTransactions: fetchReportTransactionsFromApi,
+  updateOrderPaymentStatus: updateOrderPaymentStatusFromApi,
 };

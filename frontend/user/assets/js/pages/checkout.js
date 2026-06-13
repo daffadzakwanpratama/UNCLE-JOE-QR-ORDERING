@@ -15,7 +15,6 @@ function isCheckoutFormValid() {
   return Boolean(
     checkoutState.tableNumber.trim() &&
     checkoutState.customerName.trim() &&
-    checkoutState.phoneNumber.trim() &&
     checkoutState.paymentMethod
   );
 }
@@ -198,10 +197,6 @@ function bindCheckoutActions(items, totals) {
       return;
     }
 
-    if (!checkoutState.phoneNumber.trim()) {
-      showCheckoutToast("Nomor telepon masih kosong.");
-      return;
-    }
 
     if (!checkoutState.paymentMethod) {
       showCheckoutToast("Pilih metode pembayaran dulu.");
@@ -327,11 +322,44 @@ function updateCheckoutButtonState() {
   button.classList.toggle("is-disabled", !isValid);
 }
 
+async function loadMidtransSnapScript() {
+  try {
+    const config = await window.UserApi.fetchMidtransConfig();
+    if (config) {
+      const { clientKey, isProduction } = config;
+      const snapUrl = isProduction
+        ? "https://app.midtrans.com/snap/snap.js"
+        : "https://app.sandbox.midtrans.com/snap/snap.js";
+
+      return new Promise((resolve, reject) => {
+        if (window.snap) {
+          resolve();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = snapUrl;
+        script.setAttribute("data-client-key", clientKey);
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Gagal memuat SDK pembayaran Midtrans."));
+        document.head.appendChild(script);
+      });
+    }
+  } catch (err) {
+    console.error("Gagal memuat konfigurasi Midtrans:", err);
+  }
+}
+
 async function initCheckoutPage() {
   try {
     await loadPromoCatalog();
   } catch (error) {
     promoCatalog = [];
+  }
+
+  try {
+    await loadMidtransSnapScript();
+  } catch (error) {
+    console.error("Gagal memuat pembayaran Midtrans:", error);
   }
 
   renderCheckoutPage();

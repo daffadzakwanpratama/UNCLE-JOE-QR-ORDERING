@@ -1983,6 +1983,25 @@ a {
   cursor: pointer;
 }
 
+.status-secondary-button {
+  width: 100%;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(91, 70, 54, 0.25);
+  border-radius: 1.3rem;
+  background: var(--surface-soft);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 800;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: var(--transition-ios);
+}
+
+.status-secondary-button:hover {
+  background: var(--accent-soft);
+}
+
 .empty-status-state {
   display: flex;
   flex-direction: column;

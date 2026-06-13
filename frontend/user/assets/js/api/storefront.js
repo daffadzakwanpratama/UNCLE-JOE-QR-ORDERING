@@ -59,10 +59,25 @@ async function fetchStorefrontOrderByNumber(orderNumber) {
   return payload.data;
 }
 
+async function fetchStorefrontMidtransConfig() {
+  const payload = await getUserApiClient().request("/config/midtrans");
+  return payload.data;
+}
+
+async function changeStorefrontOrderPaymentMethod(orderNumber, paymentMethod) {
+  const payload = await getUserApiClient().request(`/orders/${encodeURIComponent(orderNumber)}/payment-method`, {
+    method: "PATCH",
+    body: JSON.stringify({ paymentMethod }),
+  });
+  return payload.data;
+}
+
 window.UserApi = {
   fetchMenuCatalog: fetchStorefrontMenuCatalog,
   fetchDiscountCatalog: fetchStorefrontDiscountCatalog,
   validateDiscountCode: validateStorefrontDiscountCode,
   createOrder: createStorefrontOrder,
   fetchOrderByNumber: fetchStorefrontOrderByNumber,
+  fetchMidtransConfig: fetchStorefrontMidtransConfig,
+  changeOrderPaymentMethod: changeStorefrontOrderPaymentMethod,
 };
