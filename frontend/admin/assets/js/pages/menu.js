@@ -13,7 +13,12 @@ class MenuPage {
         this.menuIdInput = document.getElementById('menuId');
         this.menuNameInput = document.getElementById('menuName');
         this.menuCategoryInput = document.getElementById('menuCategory');
+        this.menuPriceTypeInput = document.getElementById('menuPriceType');
         this.menuPriceInput = document.getElementById('menuPrice');
+        this.menuPriceHotInput = document.getElementById('menuPriceHot');
+        this.menuPriceIceInput = document.getElementById('menuPriceIce');
+        this.singlePriceField = document.getElementById('singlePriceField');
+        this.hotIcePriceFields = document.getElementById('hotIcePriceFields');
         this.menuImageInput = document.getElementById('menuImage');
         this.menuImagePreview = document.getElementById('menuImagePreview');
         this.menuAvailableInput = document.getElementById('menuAvailable');
@@ -45,6 +50,7 @@ class MenuPage {
         document.getElementById('cancelMenuButton')?.addEventListener('click', () => this.closeModal());
         this.categoryFilter?.addEventListener('change', () => this.renderTable());
         this.menuImageInput?.addEventListener('change', (event) => this.handleImageChange(event));
+        this.menuPriceTypeInput?.addEventListener('change', () => this.togglePriceFields());
 
         this.modal?.addEventListener('click', (event) => {
             if (event.target === this.modal) this.closeModal();
@@ -85,6 +91,17 @@ class MenuPage {
             const isPopular = popularSwitch.checked;
             this.togglePopularity(menuId, isPopular);
         });
+    }
+
+    togglePriceFields() {
+        const type = this.menuPriceTypeInput?.value || 'single';
+        if (type === 'hot_ice') {
+            if (this.singlePriceField) this.singlePriceField.style.display = 'none';
+            if (this.hotIcePriceFields) this.hotIcePriceFields.style.display = 'grid';
+        } else {
+            if (this.singlePriceField) this.singlePriceField.style.display = 'grid';
+            if (this.hotIcePriceFields) this.hotIcePriceFields.style.display = 'none';
+        }
     }
 
     render() {
@@ -150,12 +167,19 @@ class MenuPage {
             const toggleLabel = isAvailable ? 'Tandai Habis' : 'Tandai Tersedia';
             const isPopular = Boolean(Number(menu.isPopular) || menu.isPopular);
 
+            let priceDisplay = '';
+            if (menu.priceType === 'hot_ice') {
+                priceDisplay = `Hot: ${AdminStore.formatAdminCurrency(Number(menu.priceHot || 0))}<br>Ice: ${AdminStore.formatAdminCurrency(Number(menu.priceIce || 0))}`;
+            } else {
+                priceDisplay = AdminStore.formatAdminCurrency(Number(menu.price || 0));
+            }
+
             return `
                 <tr>
                     <td><img class="admin-table-thumb" src="${this.getMenuImage(menu)}" alt="${this.escapeHtml(menu.name)}"></td>
                     <td class="admin-table-title">${this.escapeHtml(menu.name)}</td>
                     <td>${this.escapeHtml(categoryName)}</td>
-                    <td>${AdminStore.formatAdminCurrency(Number(menu.price || 0))}</td>
+                    <td>${priceDisplay}</td>
                     <td><span class="admin-status-badge ${availabilityClass}">${availabilityLabel}</span></td>
                     <td>
                         <label class="admin-switch">
@@ -196,7 +220,10 @@ class MenuPage {
             this.menuIdInput.value = String(menu.id);
             this.menuNameInput.value = menu.name;
             this.menuCategoryInput.value = String(menu.categoryId);
+            if (this.menuPriceTypeInput) this.menuPriceTypeInput.value = menu.priceType || 'single';
             this.menuPriceInput.value = String(Number(menu.price || 0));
+            if (this.menuPriceHotInput) this.menuPriceHotInput.value = String(Number(menu.priceHot || 0));
+            if (this.menuPriceIceInput) this.menuPriceIceInput.value = String(Number(menu.priceIce || 0));
             this.menuAvailableInput.checked = Boolean(Number(menu.available) || menu.available);
             this.menuPopularInput.checked = Boolean(Number(menu.isPopular) || menu.isPopular);
             this.currentImageData = menu.imageUrl || menu.image || '';
@@ -205,11 +232,16 @@ class MenuPage {
             if (this.menuCategoryInput.options.length) {
                 this.menuCategoryInput.value = this.menuCategoryInput.options[0].value;
             }
+            if (this.menuPriceTypeInput) this.menuPriceTypeInput.value = 'single';
+            this.menuPriceInput.value = '';
+            if (this.menuPriceHotInput) this.menuPriceHotInput.value = '';
+            if (this.menuPriceIceInput) this.menuPriceIceInput.value = '';
             this.menuAvailableInput.checked = true;
             this.menuPopularInput.checked = false;
             this.currentImageData = '';
         }
 
+        this.togglePriceFields();
         this.renderImagePreview();
         this.modal?.classList.remove('is-hidden');
         document.body.classList.add('admin-modal-open');
@@ -225,7 +257,10 @@ class MenuPage {
         const id = Number(this.menuIdInput.value);
         const name = this.menuNameInput.value.trim();
         const categoryId = Number(this.menuCategoryInput.value);
-        const price = Number(this.menuPriceInput.value);
+        const priceType = this.menuPriceTypeInput?.value || 'single';
+        const price = Number(this.menuPriceInput.value || 0);
+        const priceHot = Number(this.menuPriceHotInput?.value || 0);
+        const priceIce = Number(this.menuPriceIceInput?.value || 0);
         const available = this.menuAvailableInput.checked;
         const isPopular = this.menuPopularInput.checked;
         const imageUrl = this.currentImageData;
@@ -240,9 +275,16 @@ class MenuPage {
             return;
         }
 
-        if (!price || price < 0) {
-            this.formError.textContent = 'Harga menu wajib diisi dengan benar.';
-            return;
+        if (priceType === 'single') {
+            if (price < 0) {
+                this.formError.textContent = 'Harga menu wajib diisi dengan benar.';
+                return;
+            }
+        } else if (priceType === 'hot_ice') {
+            if (priceHot < 0 || priceIce < 0) {
+                this.formError.textContent = 'Harga Hot dan Ice wajib diisi dengan benar.';
+                return;
+            }
         }
 
         const duplicatedMenu = this.menus.find((menu) => (
@@ -260,7 +302,10 @@ class MenuPage {
             const payload = {
                 name,
                 categoryId,
+                priceType,
                 price,
+                priceHot,
+                priceIce,
                 available,
                 isPopular,
                 imageUrl,
@@ -287,7 +332,10 @@ class MenuPage {
         await AdminStore.api.updateMenu(menuId, {
             name: menu.name,
             categoryId: menu.categoryId,
+            priceType: menu.priceType || 'single',
             price: Number(menu.price || 0),
+            priceHot: Number(menu.priceHot || 0),
+            priceIce: Number(menu.priceIce || 0),
             available: !(Number(menu.available) || menu.available),
             isPopular: Boolean(Number(menu.isPopular) || menu.isPopular),
             imageUrl: menu.imageUrl || menu.image || '',
@@ -305,7 +353,10 @@ class MenuPage {
             await AdminStore.api.updateMenu(menuId, {
                 name: menu.name,
                 categoryId: menu.categoryId,
+                priceType: menu.priceType || 'single',
                 price: Number(menu.price || 0),
+                priceHot: Number(menu.priceHot || 0),
+                priceIce: Number(menu.priceIce || 0),
                 available: Boolean(Number(menu.available) || menu.available),
                 isPopular: isPopular,
                 imageUrl: menu.imageUrl || menu.image || '',

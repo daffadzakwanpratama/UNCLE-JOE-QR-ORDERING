@@ -38,7 +38,10 @@ function getCurrentTimeLabel() {
 
 function createCheckoutSummaryText(items) {
   return items
-    .map((item) => `${Number(item.qty || 0)}x ${escapeHTML(item.name)} (${escapeHTML(item.size || "M")})`)
+    .map((item) => {
+      const sizeSuffix = item.size ? ` (${escapeHTML(item.size)})` : "";
+      return `${Number(item.qty || 0)}x ${escapeHTML(item.name)}${sizeSuffix}`;
+    })
     .join(", ");
 }
 
@@ -219,8 +222,8 @@ function bindCheckoutActions(items, totals) {
         name: item.name,
         qty: Number(item.qty || 0),
         price: Number(item.price || 0),
-        size: item.size || "M",
-        note: `${item.size || "M"}${item.note ? `, ${item.note}` : ""}`,
+        size: item.size || null,
+        note: item.note || "",
       })),
       meta: {
         tableNumber: checkoutState.tableNumber.trim(),
@@ -250,7 +253,7 @@ function bindCheckoutActions(items, totals) {
         menuId: item.id,
         menuName: item.name,
         qty: Number(item.qty || 0),
-        size: item.size || "M",
+        size: item.size || null,
         note: item.note || "",
         price: Number(item.price || 0),
       })),

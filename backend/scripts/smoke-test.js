@@ -1,5 +1,5 @@
 const { createApp } = require("../src/app");
-const { query, closePool } = require("../src/config/db");
+const { query, closePool, migrateDatabase } = require("../src/config/db");
 const { createAdminToken } = require("../src/utils/adminToken");
 
 async function requestJson(baseUrl, path, options = {}) {
@@ -20,6 +20,7 @@ function assert(condition, message) {
 }
 
 async function main() {
+  await migrateDatabase();
   const admins = await query(
     `SELECT id, username, role
      FROM admins

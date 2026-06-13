@@ -75,6 +75,9 @@ const CASING_MAP = {
   unitprice: "unitPrice",
   linetotal: "lineTotal",
   fullname: "fullName",
+  pricetype: "priceType",
+  pricehot: "priceHot",
+  priceice: "priceIce",
 };
 
 function mapRowKeys(row) {
@@ -274,6 +277,26 @@ async function migrateDatabase() {
         `ALTER TABLE menus ADD COLUMN is_popular BOOLEAN NOT NULL DEFAULT FALSE`
       );
       console.log("Database migration successful: 'is_popular' column added.");
+    }
+
+    // 1b. Migrate menus table for price_type and variants
+    const columnsMenuPriceType = await query(
+      `SELECT column_name 
+       FROM information_schema.columns 
+       WHERE table_schema = 'public' 
+         AND table_name = 'menus' 
+         AND column_name = 'price_type'`
+    );
+
+    if (columnsMenuPriceType.length === 0) {
+      console.log("Migrating database: Adding 'price_type', 'price_hot', and 'price_ice' columns to 'menus' table...");
+      await getPool().execute(
+        `ALTER TABLE menus 
+         ADD COLUMN price_type VARCHAR(30) NOT NULL DEFAULT 'single',
+         ADD COLUMN price_hot DECIMAL(12, 2) NULL,
+         ADD COLUMN price_ice DECIMAL(12, 2) NULL`
+      );
+      console.log("Database migration successful: Price type and variant columns added.");
     }
 
     // 2. Migrate orders table for Midtrans payments

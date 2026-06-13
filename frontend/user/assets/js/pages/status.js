@@ -36,10 +36,12 @@ function createStatusDetailRows(order) {
     const name = escapeHTML(item.name || item.menuName || "");
     const note = escapeHTML(item.note);
     const unitPrice = Number(item.price ?? item.unitPrice ?? 0);
+    const variant = item.sizeLabel || item.size;
+    const variantSuffix = variant ? ` [${escapeHTML(variant)}]` : "";
 
     return `
       <div class="status-detail-row">
-        <span>${qty}x ${name}${note ? ` (${note})` : ""}</span>
+        <span>${qty}x ${name}${variantSuffix}${note ? ` (${note})` : ""}</span>
         <strong>${formatRupiah(qty * unitPrice)}</strong>
       </div>
     `;

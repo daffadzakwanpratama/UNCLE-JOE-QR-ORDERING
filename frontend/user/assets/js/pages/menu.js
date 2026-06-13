@@ -4,7 +4,7 @@ const searchState = {
 
 const detailState = {
   quantity: 1,
-  size: "M",
+  size: null,
 };
 
 let currentMenuItems = [];
@@ -121,7 +121,7 @@ function createSearchCard(item) {
           ` : ""}
         </div>
         <div class="search-menu-footer">
-          <span class="search-price">${formatRupiah(item.price)}</span>
+          <span class="search-price">${item.priceType === 'hot_ice' ? `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}` : formatRupiah(item.price)}</span>
           <a class="order-button search-action-button" href="./menu.html?id=${itemId}">Pesan</a>
         </div>
       </div>
@@ -165,6 +165,11 @@ function getSelectedMenuItem() {
 }
 
 function getDetailPrice(item) {
+  if (item.priceType === 'hot_ice') {
+    if (detailState.size === 'Hot') return item.priceHot * detailState.quantity;
+    if (detailState.size === 'Ice') return item.priceIce * detailState.quantity;
+    return 0;
+  }
   return item.price * detailState.quantity;
 }
 
@@ -192,6 +197,53 @@ function renderDetailPage() {
   const itemDescription = escapeHTML(item.description);
   const showRating = shouldShowProductRating(item);
 
+  let priceText = '';
+  if (item.priceType === 'hot_ice') {
+    if (detailState.size === 'Hot') {
+      priceText = formatRupiah(item.priceHot);
+    } else if (detailState.size === 'Ice') {
+      priceText = formatRupiah(item.priceIce);
+    } else {
+      priceText = `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}`;
+    }
+  } else {
+    priceText = formatRupiah(item.price || 0);
+  }
+
+  let optionsPanelHtml = '';
+  if (item.priceType === 'hot_ice') {
+    optionsPanelHtml += `
+      <div class="detail-option-group">
+        <h3>Pilih Varian</h3>
+        <div class="size-grid">
+          <button type="button" class="size-chip ${detailState.size === "Hot" ? "is-active" : ""}" data-size="Hot">Hot</button>
+          <button type="button" class="size-chip ${detailState.size === "Ice" ? "is-active" : ""}" data-size="Ice">Ice</button>
+        </div>
+      </div>
+    `;
+  }
+
+  optionsPanelHtml += `
+    <div class="detail-option-group">
+      <h3>Jumlah</h3>
+      <div class="quantity-row">
+        <button type="button" class="quantity-button" id="decreaseQty">&#8722;</button>
+        <strong class="quantity-value" id="quantityValue">${detailState.quantity}</strong>
+        <button type="button" class="quantity-button" id="increaseQty">+</button>
+      </div>
+    </div>
+
+    <div class="detail-option-group">
+      <h3>Catatan Khusus (Opsional)</h3>
+      <textarea class="detail-note-box" id="detailNote" placeholder="Contoh: Gula setengah, tanpa es..."></textarea>
+    </div>
+  `;
+
+  const dynamicDetailPrice = getDetailPrice(item);
+  const priceTextButton = dynamicDetailPrice > 0 
+    ? ` - ${formatRupiah(dynamicDetailPrice)}`
+    : '';
+
   container.innerHTML = `
     <section class="detail-media">
       <img src="${itemImage}" alt="${itemName}">
@@ -207,37 +259,17 @@ function renderDetailPage() {
         </div>
       ` : ""}
       <p class="detail-description">${itemDescription}</p>
-      <div class="detail-price-box">${formatRupiah(item.price)}</div>
+      <div class="detail-price-box" id="detailPriceBox">${priceText}</div>
     </section>
 
     <section class="detail-panel detail-options-panel">
-      <div class="detail-option-group">
-        <h3>Pilih Ukuran</h3>
-        <div class="size-grid">
-          <button type="button" class="size-chip ${detailState.size === "M" ? "is-active" : ""}" data-size="M">M</button>
-          <button type="button" class="size-chip ${detailState.size === "L" ? "is-active" : ""}" data-size="L">L</button>
-        </div>
-      </div>
-
-      <div class="detail-option-group">
-        <h3>Jumlah</h3>
-        <div class="quantity-row">
-          <button type="button" class="quantity-button" id="decreaseQty">&#8722;</button>
-          <strong class="quantity-value" id="quantityValue">${detailState.quantity}</strong>
-          <button type="button" class="quantity-button" id="increaseQty">+</button>
-        </div>
-      </div>
-
-      <div class="detail-option-group">
-        <h3>Catatan Khusus (Opsional)</h3>
-        <textarea class="detail-note-box" id="detailNote" placeholder="Contoh: Gula setengah, tanpa es..."></textarea>
-      </div>
+      ${optionsPanelHtml}
     </section>
 
     <section class="detail-action-bar">
       <button class="detail-add-button" type="button" id="addToCartButton">
         <span class="detail-add-icon" aria-hidden="true">&#128717;</span>
-        <span>Tambah ke Keranjang - ${formatRupiah(getDetailPrice(item))}</span>
+        <span>Tambah ke Keranjang${priceTextButton}</span>
       </button>
     </section>
   `;
@@ -249,14 +281,35 @@ function renderDetailPage() {
 function refreshDetailActionPrice(item) {
   const button = document.getElementById("addToCartButton");
   const quantityValue = document.getElementById("quantityValue");
+  const detailPriceBox = document.getElementById("detailPriceBox");
   if (!button || !quantityValue) {
     return;
   }
 
   quantityValue.textContent = String(detailState.quantity);
+
+  if (detailPriceBox) {
+    if (item.priceType === 'hot_ice') {
+      if (detailState.size === 'Hot') {
+        detailPriceBox.textContent = formatRupiah(item.priceHot);
+      } else if (detailState.size === 'Ice') {
+        detailPriceBox.textContent = formatRupiah(item.priceIce);
+      } else {
+        detailPriceBox.textContent = `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}`;
+      }
+    } else {
+      detailPriceBox.textContent = formatRupiah(item.price);
+    }
+  }
+
+  const dynamicDetailPrice = getDetailPrice(item);
+  const priceTextButton = dynamicDetailPrice > 0 
+    ? ` - ${formatRupiah(dynamicDetailPrice)}`
+    : '';
+
   button.innerHTML = `
     <span class="detail-add-icon" aria-hidden="true">&#128717;</span>
-    <span>Tambah ke Keranjang - ${formatRupiah(getDetailPrice(item))}</span>
+    <span>Tambah ke Keranjang${priceTextButton}</span>
   `;
 }
 
@@ -267,6 +320,7 @@ function bindDetailActions(item) {
       document.querySelectorAll("[data-size]").forEach((chip) => {
         chip.classList.toggle("is-active", chip.dataset.size === detailState.size);
       });
+      refreshDetailActionPrice(item);
     });
   });
 
@@ -281,16 +335,29 @@ function bindDetailActions(item) {
   });
 
   document.getElementById("addToCartButton")?.addEventListener("click", () => {
+    if (item.priceType === 'hot_ice' && !detailState.size) {
+      showToastMessage({
+        stackId: "detailToastStack",
+        title: "Varian belum dipilih",
+        message: "Pilih varian Hot atau Ice terlebih dahulu.",
+        useExistingStack: false,
+      });
+      return;
+    }
+
     const note = document.getElementById("detailNote")?.value.trim() || "";
     const cartItems = getCartItems();
+    const finalPrice = item.priceType === 'hot_ice' 
+      ? (detailState.size === 'Hot' ? item.priceHot : item.priceIce)
+      : item.price;
 
     cartItems.push({
       id: item.id,
       name: item.name,
       image: item.image,
-      price: item.price,
+      price: finalPrice,
       qty: detailState.quantity,
-      size: detailState.size,
+      size: detailState.size || null,
       note,
     });
 
@@ -308,6 +375,9 @@ function mapApiMenuItem(item) {
     rating: Number(item.rating || 0),
     reviews: Number(item.reviewsCount || 0),
     price: Number(item.price || 0),
+    priceType: item.priceType || 'single',
+    priceHot: Number(item.priceHot || 0),
+    priceIce: Number(item.priceIce || 0),
     oldPrice: 0,
     badge: Boolean(Number(item.available) || item.available) ? "" : "Habis",
     promo: "",

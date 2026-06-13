@@ -25,7 +25,7 @@ function createCartItemCard(item, index) {
   const itemName = escapeHTML(item.name);
   const itemImage = escapeAttribute(item.image);
   const itemNote = escapeHTML(item.note);
-  const itemSize = escapeHTML(item.size || "M");
+  const itemSize = item.size ? escapeHTML(item.size) : null;
   const itemQty = Math.max(1, Number(item.qty || 1));
 
   return `
@@ -35,7 +35,7 @@ function createCartItemCard(item, index) {
         <div class="cart-item-head">
           <div>
             <h2>${itemName}</h2>
-            <p>Size: ${itemSize}</p>
+            ${itemSize ? `<p>Varian: ${itemSize}</p>` : ""}
             ${itemNote ? `<span class="cart-item-note">${itemNote}</span>` : ""}
             <strong>${formatRupiah(item.price)}</strong>
           </div>

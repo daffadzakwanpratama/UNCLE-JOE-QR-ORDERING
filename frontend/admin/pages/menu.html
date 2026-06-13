@@ -69,9 +69,28 @@
                 </label>
 
                 <label class="admin-field">
-                    <span>Harga</span>
-                    <input type="number" id="menuPrice" name="menuPrice" placeholder="Contoh: 25000" min="0" required>
+                    <span>Tipe Harga</span>
+                    <select id="menuPriceType" name="menuPriceType" required>
+                        <option value="single">Single Price</option>
+                        <option value="hot_ice">Hot/Ice Price</option>
+                    </select>
                 </label>
+
+                <label class="admin-field" id="singlePriceField">
+                    <span>Harga</span>
+                    <input type="number" id="menuPrice" name="menuPrice" placeholder="Contoh: 25000" min="0">
+                </label>
+
+                <div id="hotIcePriceFields" class="admin-dual-grid" style="display: none;">
+                    <label class="admin-field">
+                        <span>Harga Hot</span>
+                        <input type="number" id="menuPriceHot" name="menuPriceHot" placeholder="Contoh: 22000" min="0">
+                    </label>
+                    <label class="admin-field">
+                        <span>Harga Ice</span>
+                        <input type="number" id="menuPriceIce" name="menuPriceIce" placeholder="Contoh: 25000" min="0">
+                    </label>
+                </div>
 
                 <label class="admin-field">
                     <span>Gambar Menu</span>

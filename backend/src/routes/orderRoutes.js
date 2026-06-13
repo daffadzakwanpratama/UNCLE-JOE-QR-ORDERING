@@ -480,7 +480,10 @@ router.post("/", asyncHandler(async (request, response) => {
     `SELECT
         id,
         name,
+        price_type AS "priceType",
         price,
+        price_hot AS "priceHot",
+        price_ice AS "priceIce",
         available
      FROM menus
      WHERE id IN (${menuPlaceholders})`,
@@ -509,7 +512,21 @@ router.post("/", asyncHandler(async (request, response) => {
 
   const computedItems = normalizedItems.map((item) => {
     const menu = menuMap.get(item.menuId);
-    const unitPrice = Number(menu.price || 0);
+    let unitPrice = 0;
+    const priceType = menu.priceType || 'single';
+
+    if (priceType === 'hot_ice') {
+      const selectedSize = String(item.sizeLabel || '').trim().toLowerCase();
+      if (selectedSize === 'hot') {
+        unitPrice = Number(menu.priceHot || 0);
+      } else if (selectedSize === 'ice') {
+        unitPrice = Number(menu.priceIce || 0);
+      } else {
+        throw badRequest(`Menu '${menu.name}' memerlukan pilihan varian Hot atau Ice.`);
+      }
+    } else {
+      unitPrice = Number(menu.price || 0);
+    }
 
     return {
       ...item,

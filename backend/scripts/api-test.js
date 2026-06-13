@@ -1,5 +1,5 @@
 const { createApp } = require("../src/app");
-const { closePool } = require("../src/config/db");
+const { closePool, migrateDatabase } = require("../src/config/db");
 
 function assert(condition, message) {
   if (!condition) {
@@ -19,6 +19,7 @@ async function requestJson(baseUrl, path, options = {}) {
 }
 
 async function main() {
+  await migrateDatabase();
   const app = createApp();
 
   await new Promise((resolve, reject) => {
@@ -33,6 +34,7 @@ async function main() {
       let authCookie = "";
       let createdCategoryId = 0;
       let createdMenuId = 0;
+      let createdHotIceMenuId = 0;
 
       async function cleanupCreatedData() {
         if (!authCookie) {
@@ -41,6 +43,15 @@ async function main() {
 
         if (createdMenuId) {
           await requestJson(baseUrl, `/api/menus/${createdMenuId}`, {
+            method: "DELETE",
+            headers: {
+              Cookie: authCookie,
+            },
+          }).catch(() => null);
+        }
+
+        if (createdHotIceMenuId) {
+          await requestJson(baseUrl, `/api/menus/${createdHotIceMenuId}`, {
             method: "DELETE",
             headers: {
               Cookie: authCookie,
@@ -176,7 +187,7 @@ async function main() {
             name: updatedMenuName,
             description: "Updated by api-test",
             price: 30000,
-            available: false,
+            available: true,
             imageUrl: "",
           }),
         });
@@ -188,6 +199,110 @@ async function main() {
           Array.isArray(publicMenus.body?.data) && publicMenus.body.data.some((item) => Number(item.id) === createdMenuId),
           "Menu baru harus muncul di endpoint public menus."
         );
+
+        const createHotIceMenu = await requestJson(baseUrl, "/api/menus", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Cookie: authCookie,
+          },
+          body: JSON.stringify({
+            categoryId: createdCategoryId,
+            name: `${menuName} Hot Ice`,
+            description: "Hot/Ice menu created by api-test",
+            priceType: "hot_ice",
+            priceHot: 20000,
+            priceIce: 22000,
+            available: true,
+            imageUrl: "",
+          }),
+        });
+        assert(createHotIceMenu.status === 201, "Create Hot/Ice menu harus mengembalikan 201.");
+        createdHotIceMenuId = Number(createHotIceMenu.body?.data?.id || 0);
+        assert(createdHotIceMenuId > 0, "Create Hot/Ice menu harus mengembalikan id baru.");
+
+        // Test Case A: Successful order with Single Price item (no size) and Hot/Ice item with Hot variant
+        const orderRes1 = await requestJson(baseUrl, "/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: "Test Order Client",
+            phoneNumber: "08123456789",
+            tableNumber: "T5",
+            paymentMethod: "cash",
+            items: [
+              {
+                id: createdMenuId,
+                qty: 2,
+              },
+              {
+                id: createdHotIceMenuId,
+                qty: 1,
+                size: "Hot",
+              }
+            ],
+          }),
+        });
+        assert(orderRes1.status === 201, "Order dengan item valid harus mengembalikan 201.");
+        assert(orderRes1.body?.success === true, "Order harus success.");
+        const subtotal1 = orderRes1.body?.data?.totals?.subtotal || orderRes1.body?.data?.subtotal;
+        assert(Number(subtotal1) === (2 * 30000 + 1 * 20000), "Subtotal order 1 salah.");
+
+        // Test Case B: Successful order with Hot/Ice item with Ice variant
+        const orderRes2 = await requestJson(baseUrl, "/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: "Test Order Client",
+            phoneNumber: "08123456789",
+            tableNumber: "T5",
+            paymentMethod: "cash",
+            items: [
+              {
+                id: createdHotIceMenuId,
+                qty: 3,
+                size: "Ice",
+              }
+            ],
+          }),
+        });
+        assert(orderRes2.status === 201, "Order dengan item Ice valid harus mengembalikan 201.");
+        const subtotal2 = orderRes2.body?.data?.totals?.subtotal || orderRes2.body?.data?.subtotal;
+        assert(Number(subtotal2) === (3 * 22000), "Subtotal order 2 salah.");
+
+        // Test Case C: Order with Hot/Ice item but NO variant (should fail with 400)
+        const orderRes3 = await requestJson(baseUrl, "/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: "Test Order Client",
+            phoneNumber: "08123456789",
+            tableNumber: "T5",
+            paymentMethod: "cash",
+            items: [
+              {
+                id: createdHotIceMenuId,
+                qty: 1,
+              }
+            ],
+          }),
+        });
+        assert(orderRes3.status === 400, "Order Hot/Ice tanpa varian harus mengembalikan 400.");
+
+        const deleteHotIceMenu = await requestJson(baseUrl, `/api/menus/${createdHotIceMenuId}`, {
+          method: "DELETE",
+          headers: {
+            Cookie: authCookie,
+          },
+        });
+        assert(deleteHotIceMenu.status === 200, "Delete Hot/Ice menu harus mengembalikan 200.");
+        createdHotIceMenuId = 0;
 
         const deleteMenu = await requestJson(baseUrl, `/api/menus/${createdMenuId}`, {
           method: "DELETE",

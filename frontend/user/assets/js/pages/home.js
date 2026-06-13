@@ -172,7 +172,7 @@ function createPopularCard(item) {
         <div class="price-row">
           <div class="price-group">
             ${item.oldPrice ? `<span class="price-old">${formatRupiah(item.oldPrice)}</span>` : ""}
-            <span class="price-current">${formatRupiah(item.price)}</span>
+            <span class="price-current">${item.priceType === 'hot_ice' ? `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}` : formatRupiah(item.price)}</span>
           </div>
           <a class="order-button" href="./menu.html?id=${itemId}">Pesan</a>
         </div>
@@ -216,6 +216,9 @@ function mapApiMenuItem(item) {
     rating: Number(item.rating || 0),
     reviews: Number(item.reviewsCount || 0),
     price: Number(item.price || 0),
+    priceType: item.priceType || 'single',
+    priceHot: Number(item.priceHot || 0),
+    priceIce: Number(item.priceIce || 0),
     oldPrice: 0,
     badge: Boolean(Number(item.available) || item.available) ? "" : "Habis",
     promo: "",

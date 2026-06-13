@@ -9,6 +9,7 @@ const {
   requirePositiveInteger,
   requireNonNegativeNumber,
   normalizeBoolean,
+  badRequest,
 } = require("../utils/validation");
 
 const router = express.Router();
@@ -19,7 +20,10 @@ router.get("/", asyncHandler(async (request, response) => {
         m.id,
         m.name,
         m.description,
+        m.price_type AS "priceType",
         m.price,
+        m.price_hot AS "priceHot",
+        m.price_ice AS "priceIce",
         m.available,
         m.image_url AS imageUrl,
         m.rating,
@@ -44,7 +48,10 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
     categoryId,
     name = "",
     description = "",
+    priceType = "single",
     price = 0,
+    priceHot = 0,
+    priceIce = 0,
     imageUrl = "",
     available = true,
     isPopular = false,
@@ -52,7 +59,23 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
-  const normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
+  const normalizedPriceType = requireNonEmptyString(priceType, "Tipe harga wajib diisi.", { maxLength: 30 });
+
+  if (!["single", "hot_ice"].includes(normalizedPriceType)) {
+    throw badRequest("Tipe harga tidak valid.");
+  }
+
+  let normalizedPrice = 0;
+  let normalizedPriceHot = null;
+  let normalizedPriceIce = null;
+
+  if (normalizedPriceType === "hot_ice") {
+    normalizedPriceHot = requireNonNegativeNumber(priceHot, "Harga Hot tidak valid.");
+    normalizedPriceIce = requireNonNegativeNumber(priceIce, "Harga Ice tidak valid.");
+  } else {
+    normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
+  }
+
   const normalizedAvailable = normalizeBoolean(available);
   const normalizedIsPopular = normalizeBoolean(isPopular);
 
@@ -63,16 +86,22 @@ router.post("/", requireAdminAuth, asyncHandler(async (request, response) => {
         category_id,
         name,
         description,
+        price_type,
         price,
+        price_hot,
+        price_ice,
         image_url,
         available,
         is_popular
-     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       normalizedCategoryId,
       normalizedName,
       normalizedDescription || null,
+      normalizedPriceType,
       normalizedPrice,
+      normalizedPriceHot,
+      normalizedPriceIce,
       storedImageUrl,
       normalizedAvailable ? 1 : 0,
       normalizedIsPopular ? 1 : 0,
@@ -93,7 +122,10 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
     categoryId,
     name = "",
     description = "",
+    priceType = "single",
     price = 0,
+    priceHot = 0,
+    priceIce = 0,
     imageUrl = "",
     available = true,
     isPopular = false,
@@ -101,7 +133,23 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
-  const normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
+  const normalizedPriceType = requireNonEmptyString(priceType, "Tipe harga wajib diisi.", { maxLength: 30 });
+
+  if (!["single", "hot_ice"].includes(normalizedPriceType)) {
+    throw badRequest("Tipe harga tidak valid.");
+  }
+
+  let normalizedPrice = 0;
+  let normalizedPriceHot = null;
+  let normalizedPriceIce = null;
+
+  if (normalizedPriceType === "hot_ice") {
+    normalizedPriceHot = requireNonNegativeNumber(priceHot, "Harga Hot tidak valid.");
+    normalizedPriceIce = requireNonNegativeNumber(priceIce, "Harga Ice tidak valid.");
+  } else {
+    normalizedPrice = requireNonNegativeNumber(price, "Harga menu tidak valid.");
+  }
+
   const normalizedAvailable = normalizeBoolean(available);
   const normalizedIsPopular = normalizeBoolean(isPopular);
 
@@ -134,7 +182,10 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
         category_id = ?,
         name = ?,
         description = ?,
+        price_type = ?,
         price = ?,
+        price_hot = ?,
+        price_ice = ?,
         image_url = ?,
         available = ?,
         is_popular = ?
@@ -143,7 +194,10 @@ router.put("/:id", requireAdminAuth, asyncHandler(async (request, response) => {
       normalizedCategoryId,
       normalizedName,
       normalizedDescription || null,
+      normalizedPriceType,
       normalizedPrice,
+      normalizedPriceHot,
+      normalizedPriceIce,
       storedImageUrl,
       normalizedAvailable ? 1 : 0,
       normalizedIsPopular ? 1 : 0,
