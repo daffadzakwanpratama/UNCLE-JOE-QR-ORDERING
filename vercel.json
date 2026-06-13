@@ -20,12 +20,8 @@
       "dest": "backend/server.js"
     },
     {
-      "src": "/admin",
-      "dest": "frontend/admin/pages/login.html"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "frontend/admin/$1"
+      "src": "/uploads/(.*)",
+      "dest": "backend/server.js"
     },
     {
       "src": "/user/(.*)",
@@ -36,12 +32,18 @@
       "dest": "frontend/shared/$1"
     },
     {
-      "src": "/",
-      "dest": "frontend/user/pages/index.html"
+      "src": "/admin/(.*)",
+      "dest": "frontend/admin/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend/user/pages/$1"
+      "src": "/",
+      "dest": "/user/pages/index.html",
+      "status": 307
+    },
+    {
+      "src": "/admin",
+      "dest": "/admin/pages/login.html",
+      "status": 307
     }
   ]
 }
