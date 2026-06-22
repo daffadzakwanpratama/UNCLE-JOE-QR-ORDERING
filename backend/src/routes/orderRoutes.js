@@ -154,7 +154,7 @@ router.get("/", requireAdminAuth, asyncHandler(async (request, response) => {
         o.total,
         o.barista_note,
         o.created_at
-      ORDER BY o.created_at DESC`
+      ORDER BY o.created_at ASC`
   );
 
   response.json({
