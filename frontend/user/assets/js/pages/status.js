@@ -338,17 +338,33 @@ async function initStatusPage() {
   updateCartBadge();
   renderStatusPage();
 
-  // Auto-polling status pembayaran jika pesanan belum lunas (berlaku untuk Cash & QRIS)
-  const activeOrder = getActiveOrder();
-  const isPaid = String(activeOrder?.paymentStatus || "").toLowerCase() === "paid";
-
-  if (!isPaid && activeOrder?.orderNumber) {
+  // Auto-polling status pesanan dan status pembayaran selama pesanan masih aktif
+  if (activeOrder?.orderNumber) {
     const statusInterval = window.setInterval(async () => {
       try {
         const remoteOrder = await fetchOrderByNumber(activeOrder.orderNumber);
-        if (remoteOrder && String(remoteOrder.paymentStatus || "").toLowerCase() === "paid") {
-          window.clearInterval(statusInterval);
-          window.location.reload(); // Reload untuk memperbarui tampilan menjadi Lunas/Pembayaran Berhasil
+        if (remoteOrder) {
+          const currentLocalOrder = getActiveOrder();
+          const remoteStatus = remoteOrder.status;
+          const remotePaymentStatus = remoteOrder.paymentStatus;
+          
+          const localStep = currentLocalOrder?.currentStep;
+          const remoteStep = mapOrderStatusToStep(remoteStatus);
+          
+          const localPaymentStatus = currentLocalOrder?.paymentStatus;
+          
+          // Jika ada perubahan status pesanan atau status pembayaran
+          if (remoteStep !== localStep || remotePaymentStatus !== localPaymentStatus) {
+            saveActiveOrder({
+              ...currentLocalOrder,
+              currentStep: remoteStep,
+              paymentStatus: remotePaymentStatus,
+              paymentToken: remoteOrder.paymentToken || currentLocalOrder.paymentToken || null,
+            });
+            
+            window.clearInterval(statusInterval);
+            window.location.reload(); // Reload untuk memperbarui tampilan halaman
+          }
         }
       } catch (pollError) {
         // Abaikan error koneksi saat polling

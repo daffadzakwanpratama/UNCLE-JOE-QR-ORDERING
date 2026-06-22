@@ -154,6 +154,35 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTransactionList(transactionList, orders);
             syncClearButtonState(clearButton, orders);
         });
+
+        // Set up auto-polling every 5 seconds to load new orders/status updates
+        const pollInterval = window.setInterval(async () => {
+            try {
+                const freshOrders = await AdminStore.api.fetchOrders();
+                
+                // Check if any order's status, paymentStatus, or orderNumber has changed
+                const hasChanged = freshOrders.length !== orders.length || freshOrders.some((newOrder, index) => {
+                    const oldOrder = orders[index];
+                    return !oldOrder || 
+                           newOrder.status !== oldOrder.status || 
+                           newOrder.paymentStatus !== oldOrder.paymentStatus ||
+                           newOrder.orderNumber !== oldOrder.orderNumber;
+                });
+
+                if (hasChanged) {
+                    orders.length = 0;
+                    orders.push(...freshOrders);
+                    renderTransactionList(transactionList, orders);
+                    syncClearButtonState(clearButton, orders);
+                }
+            } catch (pollError) {
+                console.error("Gagal memperbarui pesanan secara berkala:", pollError);
+            }
+        }, 5000);
+
+        window.addEventListener('beforeunload', () => {
+            window.clearInterval(pollInterval);
+        });
     } catch (error) {
         if (transactionList) {
             transactionList.innerHTML = `
