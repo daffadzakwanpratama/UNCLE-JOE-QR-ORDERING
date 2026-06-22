@@ -250,6 +250,45 @@ async function main() {
         const subtotal1 = orderRes1.body?.data?.totals?.subtotal || orderRes1.body?.data?.subtotal;
         assert(Number(subtotal1) === (2 * 30000 + 1 * 20000), "Subtotal order 1 salah.");
 
+        // Test status transitions: received -> preparing -> ready -> done
+        const testOrderNumber = orderRes1.body?.data?.orderNumber;
+        assert(testOrderNumber, "Order number harus terdefinisi.");
+
+        const advance1 = await requestJson(baseUrl, `/api/orders/${testOrderNumber}/status`, {
+          method: "PATCH",
+          headers: {
+            Cookie: authCookie,
+          },
+        });
+        assert(advance1.status === 200, "Advance status received -> preparing harus 200.");
+        assert(advance1.body?.data?.status === "preparing", "Status baru harus preparing.");
+
+        const advance2 = await requestJson(baseUrl, `/api/orders/${testOrderNumber}/status`, {
+          method: "PATCH",
+          headers: {
+            Cookie: authCookie,
+          },
+        });
+        assert(advance2.status === 200, "Advance status preparing -> ready harus 200.");
+        assert(advance2.body?.data?.status === "ready", "Status baru harus ready.");
+
+        const advance3 = await requestJson(baseUrl, `/api/orders/${testOrderNumber}/status`, {
+          method: "PATCH",
+          headers: {
+            Cookie: authCookie,
+          },
+        });
+        assert(advance3.status === 200, "Advance status ready -> done harus 200.");
+        assert(advance3.body?.data?.status === "done", "Status baru harus done.");
+
+        const advance4 = await requestJson(baseUrl, `/api/orders/${testOrderNumber}/status`, {
+          method: "PATCH",
+          headers: {
+            Cookie: authCookie,
+          },
+        });
+        assert(advance4.status === 400, "Advance status dari done harus gagal (400).");
+
         // Test Case B: Successful order with Hot/Ice item with Ice variant
         const orderRes2 = await requestJson(baseUrl, "/api/orders", {
           method: "POST",

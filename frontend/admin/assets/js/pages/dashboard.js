@@ -255,15 +255,20 @@ function renderTransactionList(container, orders) {
 }
 
 function getVisibleDashboardOrders(orders) {
+    const activeOrders = orders.filter((transaction) => {
+        const status = String(transaction.status || 'received').toLowerCase();
+        return status !== 'done' && status !== 'cancelled';
+    });
+
     if (typeof searchQuery !== 'undefined' && searchQuery) {
-        return orders.filter((transaction) => 
+        return activeOrders.filter((transaction) => 
             String(transaction.orderNumber || '').toUpperCase().includes(searchQuery) ||
             String(transaction.customerName || '').toUpperCase().includes(searchQuery)
         );
     }
 
     const hiddenOrderNumbers = new Set(getClearedDashboardOrderNumbers());
-    return orders
+    return activeOrders
         .filter((transaction) => !hiddenOrderNumbers.has(transaction.orderNumber))
         .slice(0, 4);
 }
@@ -414,6 +419,8 @@ function renderTransactionActions(transaction) {
         statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Proses</button>`;
     } else if (status === 'preparing') {
         statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Siap Diambil</button>`;
+    } else if (status === 'ready') {
+        statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Selesai</button>`;
     }
 
     let payButton = '';

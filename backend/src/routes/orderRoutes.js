@@ -18,6 +18,7 @@ const TAX_RATE = 0.1;
 const ORDER_STATUS_FLOW = {
   received: "preparing",
   preparing: "ready",
+  ready: "done",
 };
 const ORDER_NUMBER_PREFIX = "ORD";
 const ORDER_NUMBER_MAX_RETRIES = 5;
