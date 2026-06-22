@@ -339,6 +339,7 @@ async function initStatusPage() {
   renderStatusPage();
 
   // Auto-polling status pesanan dan status pembayaran selama pesanan masih aktif
+  const activeOrder = getActiveOrder();
   if (activeOrder?.orderNumber) {
     const statusInterval = window.setInterval(async () => {
       try {
