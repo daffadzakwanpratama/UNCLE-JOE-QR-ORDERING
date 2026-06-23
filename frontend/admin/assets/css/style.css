@@ -459,7 +459,8 @@ select {
     letter-spacing: 0.01em;
 }
 
-html, body {
+html,
+body {
     overflow-x: clip;
 }
 
@@ -1758,10 +1759,16 @@ html, body {
     z-index: 500;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out);
 }
 
 .admin-modal-backdrop.is-hidden {
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .admin-modal-open {
@@ -1780,6 +1787,16 @@ html, body {
         linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025)),
         var(--bg-surface);
     box-shadow: var(--shadow-xl);
+    
+    /* Animation base */
+    transform: scale(1);
+    opacity: 1;
+    transition: transform var(--t-base) var(--ease-spring), opacity var(--t-base) var(--ease-out);
+}
+
+.admin-modal-backdrop.is-hidden .admin-modal {
+    transform: scale(0.95);
+    opacity: 0;
 }
 
 .admin-modal-head {
@@ -1799,6 +1816,23 @@ html, body {
     color: var(--text-muted);
     margin-top: 5px;
     font-size: 0.88rem;
+}
+
+.admin-modal-head .admin-icon-button {
+    width: 32px;
+    height: 32px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    transition: all var(--t-fast) var(--ease-out);
+    flex-shrink: 0;
+}
+
+.admin-modal-head .admin-icon-button:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-strong);
+    transform: scale(1.05);
 }
 
 .admin-report-modal {
@@ -2054,9 +2088,28 @@ html, body {
 
 .admin-report-detail-items {
     margin: 0;
-    padding: 14px 14px 14px 30px;
+    padding: 14px 18px;
     display: grid;
-    gap: 6px;
+    gap: 8px;
+    list-style: none;
+}
+
+.admin-report-detail-items li {
+    position: relative;
+    padding-left: 20px;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.admin-report-detail-items li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: var(--accent-green);
+    font-weight: bold;
+    font-size: 1.1rem;
+    line-height: 1;
+    top: -1px;
 }
 
 .admin-report-detail-note strong {
@@ -2566,10 +2619,29 @@ html, body {
     }
 
     .admin-transaction-card-list,
-    .admin-report-period-card,
-    .admin-report-detail-grid {
+    .admin-report-period-card {
         grid-template-columns: 1fr !important;
         gap: 9px !important;
+    }
+
+    .admin-report-detail-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .admin-report-detail-item {
+        padding: 10px 12px !important;
+        border-radius: var(--r-sm) !important;
+    }
+
+    .admin-report-detail-item span {
+        font-size: 0.65rem !important;
+    }
+
+    .admin-report-detail-item strong {
+        font-size: 0.88rem !important;
+        letter-spacing: -0.02em !important;
     }
 
     /* Transaction card */
@@ -2626,23 +2698,14 @@ html, body {
         width: 100% !important;
     }
 
-    /* Modals — slide up from bottom */
+    /* Modals — centered dialog popup */
     .admin-modal-backdrop {
-        padding: 0 !important;
-        align-items: flex-end !important;
+        padding: 16px !important;
     }
 
-    .admin-report-modal,
     .admin-modal {
-        padding: 20px 16px 26px !important;
-        border-radius: var(--r-xl) var(--r-xl) 0 0 !important;
-        max-height: 90vh !important;
-        width: 100% !important;
-        overflow-y: auto !important;
-    }
-
-    .admin-modal-head {
-        margin-bottom: 14px !important;
+        padding: 24px 20px !important;
+        max-height: calc(100vh - 40px) !important;
     }
 
     .admin-modal-head h2 {
@@ -2660,8 +2723,8 @@ html, body {
     }
 
     .admin-report-detail-items {
-        padding: 10px 10px 10px 22px !important;
-        gap: 5px !important;
+        padding: 10px 12px !important;
+        gap: 6px !important;
     }
 
     /* Chart */

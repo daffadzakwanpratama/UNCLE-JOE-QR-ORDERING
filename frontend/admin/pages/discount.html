@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Diskon</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
+
 <body class="admin-page-body admin-protected-page" data-admin-page="discount">
     <div class="admin-layout">
         <aside class="admin-sidebar" data-admin-sidebar></aside>
@@ -58,7 +64,8 @@
                                 <td colspan="8">
                                     <div class="admin-empty-state">
                                         <strong>Belum ada kode promo</strong>
-                                        <p>Struktur halaman siap. Nanti data voucher dan referral akan dikelola dari sini.</p>
+                                        <p>Struktur halaman siap. Nanti data voucher dan referral akan dikelola dari
+                                            sini.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -76,7 +83,12 @@
                     <h2 id="discountModalTitle">Tambah Kode Diskon</h2>
                     <p>Isi detail voucher atau referral code agar user bisa mendapatkan potongan harga.</p>
                 </div>
-                <button type="button" class="admin-icon-button" id="closeDiscountModal" aria-label="Tutup modal">x</button>
+                <button type="button" class="admin-icon-button" id="closeDiscountModal" aria-label="Tutup modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
 
             <form id="discountForm" class="admin-form admin-discount-form" novalidate>
@@ -84,7 +96,8 @@
 
                 <label class="admin-field">
                     <span>Nama Promo</span>
-                    <input type="text" id="discountName" name="discountName" placeholder="Contoh: Promo Hemat 10%" required>
+                    <input type="text" id="discountName" name="discountName" placeholder="Contoh: Promo Hemat 10%"
+                        required>
                 </label>
 
                 <label class="admin-field">
@@ -110,22 +123,26 @@
 
                 <label class="admin-field">
                     <span>Nilai Diskon</span>
-                    <input type="number" id="discountValue" name="discountValue" min="0" placeholder="Contoh: 10 atau 12000" required>
+                    <input type="number" id="discountValue" name="discountValue" min="0"
+                        placeholder="Contoh: 10 atau 12000" required>
                 </label>
 
                 <label class="admin-field">
                     <span>Minimum Pembelian</span>
-                    <input type="number" id="discountMinPurchase" name="discountMinPurchase" min="0" placeholder="Contoh: 50000">
+                    <input type="number" id="discountMinPurchase" name="discountMinPurchase" min="0"
+                        placeholder="Contoh: 50000">
                 </label>
 
                 <label class="admin-field">
                     <span>Maksimum Potongan</span>
-                    <input type="number" id="discountMaxDiscount" name="discountMaxDiscount" min="0" placeholder="Contoh: 15000">
+                    <input type="number" id="discountMaxDiscount" name="discountMaxDiscount" min="0"
+                        placeholder="Contoh: 15000">
                 </label>
 
                 <label class="admin-field">
                     <span>Batas Penggunaan</span>
-                    <input type="number" id="discountUsageLimit" name="discountUsageLimit" min="1" placeholder="Contoh: 100">
+                    <input type="number" id="discountUsageLimit" name="discountUsageLimit" min="1"
+                        placeholder="Contoh: 100">
                 </label>
 
                 <label class="admin-field">
@@ -140,7 +157,8 @@
 
                 <label class="admin-field admin-field-span-2">
                     <span>Deskripsi</span>
-                    <textarea id="discountDescription" name="discountDescription" rows="3" placeholder="Jelaskan aturan atau tujuan promo ini"></textarea>
+                    <textarea id="discountDescription" name="discountDescription" rows="3"
+                        placeholder="Jelaskan aturan atau tujuan promo ini"></textarea>
                 </label>
 
                 <label class="admin-field admin-checkbox-field admin-field-span-2">
@@ -165,5 +183,5 @@
     <script src="../assets/js/shared/store.js"></script>
     <script src="../assets/js/pages/discount.js"></script>
 </body>
-</html>
 
+</html>

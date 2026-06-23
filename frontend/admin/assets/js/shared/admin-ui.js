@@ -255,11 +255,11 @@ function renderAdminTopBar(currentPage = '') {
                     backdrop = document.createElement('div');
                     backdrop.className = 'admin-sidebar-backdrop';
                     document.body.appendChild(backdrop);
-                    
+
                     requestAnimationFrame(() => {
                         backdrop.classList.add('is-active');
                     });
-                    
+
                     backdrop.addEventListener('click', () => {
                         sidebar.classList.remove('is-sidebar-open');
                         backdrop.classList.remove('is-active');
@@ -408,7 +408,7 @@ function printReceipt(order) {
     // Build items HTML
     const items = Array.isArray(order.items) ? order.items : [];
     let itemsHtml = '';
-    
+
     if (items.length > 0) {
         itemsHtml = items.map(item => {
             const name = item.menuName || item.name || '-';
@@ -417,7 +417,7 @@ function printReceipt(order) {
             const lineTotal = Number(item.lineTotal || (qty * price));
             const sizeSuffix = item.sizeLabel ? ` (${item.sizeLabel})` : '';
             const noteSuffix = item.note ? `<div class="item-note">Catatan: ${escapeHtml(item.note)}</div>` : '';
-            
+
             return `
                 <tr class="item-row">
                     <td>
@@ -441,7 +441,7 @@ function printReceipt(order) {
     }
 
     const orderNumber = order.orderNumber || order.code || '-';
-    
+
     // Formatting date and time
     let formattedDate = '-';
     if (order.createdAt) {
@@ -467,7 +467,7 @@ function printReceipt(order) {
     const tableNumber = order.tableNumber || order.table || '-';
     const customerName = order.customerName || order.customer || '-';
     const paymentMethod = String(order.paymentMethod || order.payment || '-').toUpperCase();
-    
+
     let paymentStatus = 'BELUM LUNAS';
     const rawStatus = String(order.paymentStatus || '').toLowerCase();
     if (paymentMethod === 'QRIS') {

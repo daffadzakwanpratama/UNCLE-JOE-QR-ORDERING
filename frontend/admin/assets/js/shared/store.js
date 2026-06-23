@@ -105,7 +105,7 @@ function saveRememberedUsername(username) {
 
 function getMenuPlaceholder(label = 'Menu') {
     const safeLabel = String(label).slice(0, 2).toUpperCase() || 'MN';
-    
+
     // Distinguish Menu (Amber/Orange) from Banner (Bronze #A77F60) color science
     const isBanner = safeLabel === 'BN';
     const startColor = isBanner ? '#855b3c' : '#d97706';
