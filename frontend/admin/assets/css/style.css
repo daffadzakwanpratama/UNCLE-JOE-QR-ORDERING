@@ -2613,17 +2613,21 @@ html:has(body.admin-modal-open) {
 
     /* Collapsing grids */
     .admin-checklist,
-    .admin-dual-grid,
-    .admin-table-qr-grid,
-    .admin-banner-form,
-    .admin-discount-form {
+    .admin-table-qr-grid {
         grid-template-columns: 1fr !important;
         gap: 8px !important;
     }
 
-    /* Restore field-span-2 to auto in single-col context */
+    .admin-dual-grid,
+    .admin-banner-form,
+    .admin-discount-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px 10px !important;
+    }
+
+    /* Keep field-span-2 spanning full width in 2-col context */
     .admin-field-span-2 {
-        grid-column: auto !important;
+        grid-column: 1 / -1 !important;
     }
 
     .admin-transaction-card-list,
