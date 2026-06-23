@@ -195,6 +195,14 @@ async function updateOrderPaymentStatusFromApi(orderNumber, paymentStatus) {
   return payload.data;
 }
 
+async function clearOrdersWithApi(orderNumbers) {
+  const payload = await getAdminApiClient().request("/orders/clear", {
+    method: "POST",
+    body: JSON.stringify({ orderNumbers }),
+  });
+  return payload.data;
+}
+
 window.AdminApi = {
   loginAdmin: loginAdminWithApi,
   fetchAdminSession: fetchAdminSessionFromApi,
@@ -221,4 +229,5 @@ window.AdminApi = {
   fetchReportSummary: fetchReportSummaryFromApi,
   fetchReportTransactions: fetchReportTransactionsFromApi,
   updateOrderPaymentStatus: updateOrderPaymentStatusFromApi,
+  clearOrders: clearOrdersWithApi,
 };

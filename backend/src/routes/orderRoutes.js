@@ -336,6 +336,29 @@ router.patch("/:orderNumber/status", requireAdminAuth, asyncHandler(async (reque
   });
 }));
 
+router.post("/clear", requireAdminAuth, asyncHandler(async (request, response) => {
+  const { orderNumbers } = request.body || {};
+  if (!Array.isArray(orderNumbers) || !orderNumbers.length) {
+    return response.status(400).json({
+      success: false,
+      message: "Nomor pesanan tidak valid.",
+    });
+  }
+
+  const placeholders = orderNumbers.map(() => "?").join(", ");
+  await query(
+    `UPDATE orders
+     SET status = 'done'
+     WHERE order_number IN (${placeholders})`,
+    orderNumbers
+  );
+
+  response.json({
+    success: true,
+    message: "Pesanan berhasil dibersihkan dari dashboard.",
+  });
+}));
+
 router.patch("/:orderNumber/payment-method", asyncHandler(async (request, response) => {
   const orderNumber = requireNonEmptyString(request.params.orderNumber, "Order number wajib diisi.", { maxLength: 30 });
   const { paymentMethod } = request.body || {};

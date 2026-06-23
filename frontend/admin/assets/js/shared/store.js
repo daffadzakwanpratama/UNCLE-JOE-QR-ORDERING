@@ -281,6 +281,7 @@ window.AdminStore = {
         fetchReportSummary: window.AdminApi?.fetchReportSummary,
         fetchReportTransactions: window.AdminApi?.fetchReportTransactions,
         updateOrderPaymentStatus: window.AdminApi?.updateOrderPaymentStatus,
+        clearOrders: window.AdminApi?.clearOrders,
     },
 };
 

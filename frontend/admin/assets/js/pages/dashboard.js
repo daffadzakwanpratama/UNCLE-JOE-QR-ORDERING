@@ -137,22 +137,40 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const confirmed = await showAdminConfirm(
                 'Bersihkan Dashboard',
-                'Clear transaksi hanya akan mengosongkan daftar di dashboard. Data laporan tetap tersimpan. Lanjutkan?'
+                'Clear transaksi akan mengosongkan daftar di dashboard untuk SEMUA perangkat. Data laporan tetap tersimpan. Lanjutkan?'
             );
             if (!confirmed) {
                 return;
             }
 
-            const hiddenOrderNumbers = new Set(getClearedDashboardOrderNumbers());
-            visibleOrders.forEach((order) => {
-                if (order?.orderNumber) {
-                    hiddenOrderNumbers.add(order.orderNumber);
-                }
-            });
+            const orderNumbers = visibleOrders
+                .map((order) => order?.orderNumber)
+                .filter(Boolean);
 
-            saveClearedDashboardOrderNumbers([...hiddenOrderNumbers]);
-            renderTransactionList(transactionList, orders);
-            syncClearButtonState(clearButton, orders);
+            if (!orderNumbers.length) {
+                return;
+            }
+
+            const originalText = clearButton.textContent;
+            clearButton.disabled = true;
+            clearButton.textContent = 'Membersihkan...';
+
+            try {
+                await AdminStore.api.clearOrders(orderNumbers);
+                orderNumbers.forEach((orderNumber) => {
+                    const order = orders.find((o) => o.orderNumber === orderNumber);
+                    if (order) {
+                        order.status = 'done';
+                    }
+                });
+                renderTransactionList(transactionList, orders);
+                syncClearButtonState(clearButton, orders);
+            } catch (error) {
+                await showAdminAlert('Gagal Membersihkan', error.message || 'Gagal membersihkan transaksi di database.');
+            } finally {
+                clearButton.disabled = false;
+                clearButton.textContent = originalText;
+            }
         });
 
         // Set up auto-polling every 5 seconds to load new orders/status updates
