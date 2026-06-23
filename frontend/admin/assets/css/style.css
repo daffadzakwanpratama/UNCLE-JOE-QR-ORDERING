@@ -2714,14 +2714,14 @@ html:has(body.admin-modal-open) {
     }
 
     .admin-modal {
-        padding: 16px 14px !important;
-        max-height: calc(100vh - 48px) !important;
+        padding: 12px 12px !important;
+        max-height: calc(100vh - 32px) !important;
         border-radius: var(--r-lg) !important;
         overscroll-behavior: contain !important;
     }
 
     .admin-modal-head {
-        margin-bottom: 12px !important;
+        margin-bottom: 8px !important;
     }
 
     .admin-modal-head h2 {
@@ -2729,51 +2729,51 @@ html:has(body.admin-modal-open) {
     }
 
     .admin-modal-head p {
-        font-size: 0.78rem !important;
-        margin-top: 3px !important;
+        font-size: 0.8rem !important;
+        margin-top: 2px !important;
     }
 
     /* Compact form elements inside modal on mobile */
     .admin-modal .admin-form {
-        gap: 10px !important;
+        gap: 8px !important;
     }
     
     .admin-modal .admin-field {
-        gap: 5px !important;
+        gap: 3px !important;
     }
     
     .admin-modal .admin-field input,
     .admin-modal .admin-field textarea,
     .admin-modal .admin-field select {
-        padding: 9px 11px !important;
-        font-size: 0.84rem !important;
+        padding: 7px 10px !important;
+        font-size: 0.9rem !important;
     }
     
     .admin-modal .admin-image-preview-wrap {
-        padding: 6px !important;
+        padding: 4px !important;
         display: flex !important;
         justify-content: center !important;
     }
     
     .admin-modal .admin-image-preview {
-        max-width: 80px !important;
+        max-width: 64px !important;
         border-radius: var(--r-sm) !important;
     }
     
     .admin-modal .admin-banner-preview-wrap {
-        min-height: 70px !important;
-        padding: 6px !important;
+        min-height: 60px !important;
+        padding: 4px !important;
     }
     
     .admin-modal .admin-banner-preview-wrap .admin-image-preview {
-        max-width: 90px !important;
-        max-height: 60px !important;
+        max-width: 80px !important;
+        max-height: 48px !important;
     }
     
     .admin-modal .admin-primary-button,
     .admin-modal .admin-secondary-button {
-        padding: 9px 12px !important;
-        font-size: 0.82rem !important;
+        padding: 8px 12px !important;
+        font-size: 0.88rem !important;
     }
 
     /* Report page */
