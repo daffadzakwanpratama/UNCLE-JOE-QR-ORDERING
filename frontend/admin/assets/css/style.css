@@ -1763,6 +1763,7 @@ body {
     visibility: visible;
     pointer-events: auto;
     transition: opacity var(--t-base) var(--ease-out), visibility var(--t-base) var(--ease-out);
+    overscroll-behavior: contain;
 }
 
 .admin-modal-backdrop.is-hidden {
@@ -1772,7 +1773,13 @@ body {
 }
 
 .admin-modal-open {
-    overflow: hidden;
+    overflow: hidden !important;
+    height: 100vh !important;
+}
+
+html:has(body.admin-modal-open) {
+    overflow: hidden !important;
+    height: 100vh !important;
 }
 
 .admin-modal {
@@ -1787,6 +1794,7 @@ body {
         linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025)),
         var(--bg-surface);
     box-shadow: var(--shadow-xl);
+    overscroll-behavior: contain;
     
     /* Animation base */
     transform: scale(1);
@@ -2670,7 +2678,7 @@ body {
 
     /* Forms */
     .admin-form-actions {
-        flex-direction: column-reverse !important;
+        flex-direction: row !important;
         gap: 8px !important;
     }
 
@@ -2695,21 +2703,77 @@ body {
     }
 
     .admin-form-actions button {
-        width: 100% !important;
+        flex: 1 !important;
+        width: auto !important;
     }
 
     /* Modals — centered dialog popup */
     .admin-modal-backdrop {
         padding: 16px !important;
+        overscroll-behavior: contain !important;
     }
 
     .admin-modal {
-        padding: 24px 20px !important;
-        max-height: calc(100vh - 40px) !important;
+        padding: 16px 14px !important;
+        max-height: calc(100vh - 48px) !important;
+        border-radius: var(--r-lg) !important;
+        overscroll-behavior: contain !important;
+    }
+
+    .admin-modal-head {
+        margin-bottom: 12px !important;
     }
 
     .admin-modal-head h2 {
         font-size: 1.15rem !important;
+    }
+
+    .admin-modal-head p {
+        font-size: 0.78rem !important;
+        margin-top: 3px !important;
+    }
+
+    /* Compact form elements inside modal on mobile */
+    .admin-modal .admin-form {
+        gap: 10px !important;
+    }
+    
+    .admin-modal .admin-field {
+        gap: 5px !important;
+    }
+    
+    .admin-modal .admin-field input,
+    .admin-modal .admin-field textarea,
+    .admin-modal .admin-field select {
+        padding: 9px 11px !important;
+        font-size: 0.84rem !important;
+    }
+    
+    .admin-modal .admin-image-preview-wrap {
+        padding: 6px !important;
+        display: flex !important;
+        justify-content: center !important;
+    }
+    
+    .admin-modal .admin-image-preview {
+        max-width: 80px !important;
+        border-radius: var(--r-sm) !important;
+    }
+    
+    .admin-modal .admin-banner-preview-wrap {
+        min-height: 70px !important;
+        padding: 6px !important;
+    }
+    
+    .admin-modal .admin-banner-preview-wrap .admin-image-preview {
+        max-width: 90px !important;
+        max-height: 60px !important;
+    }
+    
+    .admin-modal .admin-primary-button,
+    .admin-modal .admin-secondary-button {
+        padding: 9px 12px !important;
+        font-size: 0.82rem !important;
     }
 
     /* Report page */

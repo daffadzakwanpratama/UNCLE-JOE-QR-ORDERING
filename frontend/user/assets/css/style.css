@@ -2743,6 +2743,7 @@ a {
   z-index: 10000;
   opacity: 0;
   transition: opacity 0.25s ease;
+  overscroll-behavior: contain;
 }
 
 .custom-dialog-overlay.is-visible {
