@@ -2765,13 +2765,21 @@ html:has(body.admin-modal-open) {
     }
     
     .admin-modal .admin-banner-preview-wrap {
-        min-height: 60px !important;
-        padding: 4px !important;
+        min-height: 90px !important;
+        padding: 6px !important;
+        grid-column: 1 / -1 !important;
     }
     
     .admin-modal .admin-banner-preview-wrap .admin-image-preview {
-        max-width: 80px !important;
-        max-height: 48px !important;
+        max-width: 140px !important;
+        max-height: 80px !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
+    /* Stack date inputs vertically on mobile to prevent overlapping */
+    .admin-modal .admin-field:has(input[type="date"]) {
+        grid-column: 1 / -1 !important;
     }
     
     .admin-modal .admin-primary-button,
