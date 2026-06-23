@@ -130,20 +130,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         clearButton?.addEventListener('click', async () => {
-            const visibleOrders = getVisibleDashboardOrders(orders);
-            if (!visibleOrders.length) {
+            const activeOrders = orders.filter((transaction) => {
+                const status = String(transaction.status || 'received').toLowerCase();
+                return status !== 'done' && status !== 'cancelled';
+            });
+
+            if (!activeOrders.length) {
                 return;
             }
 
             const confirmed = await showAdminConfirm(
                 'Bersihkan Dashboard',
-                'Clear transaksi akan mengosongkan daftar di dashboard untuk SEMUA perangkat. Data laporan tetap tersimpan. Lanjutkan?'
+                `Clear transaksi akan mengosongkan seluruh (${activeOrders.length}) daftar transaksi aktif di dashboard untuk SEMUA perangkat. Lanjutkan?`
             );
             if (!confirmed) {
                 return;
             }
 
-            const orderNumbers = visibleOrders
+            const orderNumbers = activeOrders
                 .map((order) => order?.orderNumber)
                 .filter(Boolean);
 
