@@ -203,6 +203,19 @@ async function clearOrdersWithApi(orderNumbers) {
   return payload.data;
 }
 
+async function fetchSettingsFromApi() {
+  const payload = await getAdminApiClient().request("/settings/manage");
+  return payload.data;
+}
+
+async function updateSettingsWithApi(settings) {
+  const payload = await getAdminApiClient().request("/settings/manage", {
+    method: "PUT",
+    body: JSON.stringify(settings),
+  });
+  return payload.data;
+}
+
 window.AdminApi = {
   loginAdmin: loginAdminWithApi,
   fetchAdminSession: fetchAdminSessionFromApi,
@@ -230,4 +243,6 @@ window.AdminApi = {
   fetchReportTransactions: fetchReportTransactionsFromApi,
   updateOrderPaymentStatus: updateOrderPaymentStatusFromApi,
   clearOrders: clearOrdersWithApi,
+  fetchSettings: fetchSettingsFromApi,
+  updateSettings: updateSettingsWithApi,
 };

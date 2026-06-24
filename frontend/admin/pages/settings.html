@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Pengaturan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body class="admin-page-body admin-protected-page" data-admin-page="settings">
+    <div class="admin-layout">
+        <aside class="admin-sidebar" data-admin-sidebar></aside>
+
+        <main class="admin-content">
+            <header class="admin-page-header" data-admin-page-header></header>
+
+            <section class="admin-panel is-panel-tinted" style="max-width: 600px; margin-top: 24px;">
+                <div class="admin-panel-head" data-admin-panel-head></div>
+
+                <form id="settingsForm" class="admin-form" style="margin-top: 20px; display: grid; gap: 20px;" novalidate>
+                    <label class="admin-field">
+                        <span>Pajak Belanja (%)</span>
+                        <input type="number" id="settingsTaxPercent" name="tax_percent" min="0" max="100" placeholder="Contoh: 10" required>
+                        <small style="color: var(--text-muted); margin-top: 4px; display: block;">Persentase pajak yang dikenakan pada subtotal pesanan.</small>
+                    </label>
+
+                    <label class="admin-field">
+                        <span>Biaya Layanan (Rp)</span>
+                        <input type="number" id="settingsServiceFee" name="service_fee" min="0" placeholder="Contoh: 2000" required>
+                        <small style="color: var(--text-muted); margin-top: 4px; display: block;">Nominal tetap biaya layanan tambahan per transaksi.</small>
+                    </label>
+
+                    <p class="admin-form-error" id="settingsFormError" style="color: var(--accent-red); font-size: 0.88rem; font-weight: 500;"></p>
+
+                    <div class="admin-form-actions" style="margin-top: 10px;">
+                        <button type="submit" class="admin-primary-button" id="saveSettingsButton">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script src="../../shared/assets/js/api/base-client.js"></script>
+    <script src="../assets/js/api/client.js"></script>
+    <script src="../assets/js/api/admin.js"></script>
+    <script src="../assets/js/shared/admin-ui.js"></script>
+    <script src="../assets/js/shared/store.js"></script>
+    <script src="../assets/js/pages/settings.js"></script>
+</body>
+</html>

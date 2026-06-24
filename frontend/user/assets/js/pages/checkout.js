@@ -127,7 +127,7 @@ function renderCheckoutPage() {
         <strong>${formatRupiah(totals.serviceFee)}</strong>
       </div>
       <div class="cart-summary-row">
-        <span>Pajak (10%)</span>
+        <span>Pajak (${storefrontSettings.tax_percent}%)</span>
         <strong>${formatRupiah(totals.tax)}</strong>
       </div>
       ${totals.promoDiscount ? `
@@ -354,7 +354,10 @@ async function loadMidtransSnapScript() {
 
 async function initCheckoutPage() {
   try {
-    await loadPromoCatalog();
+    await Promise.all([
+      loadPromoCatalog(),
+      loadStorefrontSettings()
+    ]);
   } catch (error) {
     promoCatalog = [];
   }

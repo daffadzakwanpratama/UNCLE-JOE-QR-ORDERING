@@ -325,6 +325,31 @@ async function migrateDatabase() {
       );
       console.log("Database migration successful: Payment columns added to 'orders' table.");
     }
+
+    // 3. Migrate settings table
+    const tableSettingsExists = await query(
+      `SELECT table_name 
+       FROM information_schema.tables 
+       WHERE table_schema = 'public' 
+         AND table_name = 'settings'`
+    );
+
+    if (tableSettingsExists.length === 0) {
+      console.log("Migrating database: Creating 'settings' table...");
+      await getPool().execute(
+        `CREATE TABLE settings (
+            key VARCHAR(50) PRIMARY KEY,
+            value VARCHAR(255) NOT NULL,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+         )`
+      );
+      await getPool().execute(
+        `INSERT INTO settings (key, value) VALUES 
+         ('tax_percent', '10'),
+         ('service_fee', '2000')`
+      );
+      console.log("Database migration successful: 'settings' table created and seeded.");
+    }
   } catch (error) {
     console.error("Database migration failed:", error.message || error);
   }

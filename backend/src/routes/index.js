@@ -7,6 +7,7 @@ const orderRoutes = require("./orderRoutes");
 const bannerRoutes = require("./bannerRoutes");
 const discountRoutes = require("./discountRoutes");
 const reportRoutes = require("./reportRoutes");
+const settingsRoutes = require("./settingsRoutes");
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use("/orders", orderRoutes);
 router.use("/banners/manage", bannerRoutes);
 router.use("/discounts/manage", discountRoutes);
 router.use("/reports", reportRoutes);
+router.use("/settings/manage", settingsRoutes);
 
 module.exports = router;

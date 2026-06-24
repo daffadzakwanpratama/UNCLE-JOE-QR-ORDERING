@@ -81,6 +81,11 @@ const ADMIN_ICONS = {
             <path d="M17 17h3v3h-3z"></path>
         </svg>
     `.trim(),
+    settings: `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" stroke="none" d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"></path>
+        </svg>
+    `.trim(),
 };
 
 const ADMIN_NAV_ITEMS = [
@@ -90,6 +95,7 @@ const ADMIN_NAV_ITEMS = [
     { id: 'banner', label: 'Banner', href: './banner.html', icon: 'banner', tone: 'banner' },
     { id: 'discount', label: 'Diskon', href: './discount.html', icon: 'discount', tone: 'red' },
     { id: 'report', label: 'Laporan', href: './report.html', icon: 'report', tone: 'green' },
+    { id: 'settings', label: 'Pengaturan', href: './settings.html', icon: 'settings', tone: 'gray' },
     { id: 'logout', label: 'Logout', href: './login.html', icon: 'logout', tone: 'gray', extraClass: 'admin-logout-link' },
 ];
 
@@ -125,6 +131,7 @@ const ADMIN_SUMMARY_CARDS = {
         { tone: 'violet', icon: 'transactions', label: 'Total Transaksi', valueId: 'reportTransactionCount', defaultValue: '0' },
         { tone: 'primary', icon: 'average', label: 'Rata-rata Transaksi', valueId: 'reportAverageTransaction', defaultValue: 'Rp0' },
     ],
+    settings: [],
 };
 
 const ADMIN_PAGE_HEADERS = {
@@ -171,6 +178,11 @@ const ADMIN_PAGE_HEADERS = {
         title: 'Ringkasan Keuangan',
         subtitle: 'Pantau pemasukan per bulan, buka detail transaksi, dan export laporan spreadsheet.',
     },
+    settings: {
+        kicker: 'Pengaturan Toko',
+        title: 'Konfigurasi Sistem',
+        subtitle: 'Atur nominal pajak, biaya layanan, dan parameter operasional lainnya.',
+    },
 };
 
 const ADMIN_PANEL_HEADS = {
@@ -198,6 +210,10 @@ const ADMIN_PANEL_HEADS = {
     report: {
         title: 'Laporan Transaksi',
         description: 'Filter laporan bulanan, cek detail transaksi satu per satu, lalu export ke spreadsheet.',
+    },
+    settings: {
+        title: 'Pajak & Biaya Layanan',
+        description: 'Perubahan akan langsung berdampak pada perhitungan total belanja pelanggan di semua meja.',
     },
 };
 

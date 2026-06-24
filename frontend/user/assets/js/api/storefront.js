@@ -72,6 +72,11 @@ async function changeStorefrontOrderPaymentMethod(orderNumber, paymentMethod) {
   return payload.data;
 }
 
+async function fetchStorefrontSettings() {
+  const payload = await getUserApiClient().request("/settings");
+  return payload.data || null;
+}
+
 window.UserApi = {
   fetchMenuCatalog: fetchStorefrontMenuCatalog,
   fetchDiscountCatalog: fetchStorefrontDiscountCatalog,
@@ -80,4 +85,5 @@ window.UserApi = {
   fetchOrderByNumber: fetchStorefrontOrderByNumber,
   fetchMidtransConfig: fetchStorefrontMidtransConfig,
   changeOrderPaymentMethod: changeStorefrontOrderPaymentMethod,
+  fetchSettings: fetchStorefrontSettings,
 };

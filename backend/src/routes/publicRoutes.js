@@ -181,4 +181,20 @@ router.get("/config/midtrans", (request, response) => {
   });
 });
 
+router.get("/settings", asyncHandler(async (request, response) => {
+  const settingsRows = await query(
+    `SELECT key, value FROM settings`
+  );
+  
+  const settings = {};
+  settingsRows.forEach(row => {
+    settings[row.key] = row.value;
+  });
+
+  response.json({
+    success: true,
+    data: settings,
+  });
+}));
+
 module.exports = router;

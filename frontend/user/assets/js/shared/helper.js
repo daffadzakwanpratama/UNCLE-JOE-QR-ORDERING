@@ -1,4 +1,8 @@
 let promoCatalog = [];
+let storefrontSettings = {
+  tax_percent: 10,
+  service_fee: 2000
+};
 
 function readJsonStorage(key, fallbackValue) {
   try {
@@ -115,11 +119,11 @@ function getSubtotal(items) {
 }
 
 function getServiceFee(subtotal) {
-  return subtotal > 0 ? 2000 : 0;
+  return subtotal > 0 ? storefrontSettings.service_fee : 0;
 }
 
 function getTax(subtotal) {
-  return subtotal > 0 ? Math.round(subtotal * 0.1) : 0;
+  return subtotal > 0 ? Math.round(subtotal * (storefrontSettings.tax_percent / 100)) : 0;
 }
 
 function normalizePromoCode(code) {
@@ -316,6 +320,22 @@ async function loadPromoCatalog() {
   return promoCatalog;
 }
 
+async function loadStorefrontSettings() {
+  if (!window.UserApi?.fetchSettings) {
+    return storefrontSettings;
+  }
+  try {
+    const data = await window.UserApi.fetchSettings();
+    if (data) {
+      storefrontSettings.tax_percent = Number(data.tax_percent ?? 10);
+      storefrontSettings.service_fee = Number(data.service_fee ?? 2000);
+    }
+  } catch (error) {
+    console.warn("Gagal memuat pengaturan toko dari API, menggunakan default:", error);
+  }
+  return storefrontSettings;
+}
+
 async function validatePromoCodeViaApi(code) {
   const normalizedCode = normalizePromoCode(code);
   if (!normalizedCode) {
@@ -421,5 +441,6 @@ function showCustomAlert(title, message) {
 
 window.showCustomConfirm = showCustomConfirm;
 window.showCustomAlert = showCustomAlert;
+window.loadStorefrontSettings = loadStorefrontSettings;
 
 syncActiveTableFromLocation();

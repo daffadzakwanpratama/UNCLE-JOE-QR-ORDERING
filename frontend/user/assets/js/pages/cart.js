@@ -82,7 +82,7 @@ function createCartSummary(items) {
         <strong>${formatRupiah(totals.serviceFee)}</strong>
       </div>
       <div class="cart-summary-row">
-        <span>Pajak (10%)</span>
+        <span>Pajak (${storefrontSettings.tax_percent}%)</span>
         <strong>${formatRupiah(totals.tax)}</strong>
       </div>
       ${totals.promoDiscount ? `
@@ -198,7 +198,10 @@ function renderCartPage() {
 
 async function initCartPage() {
   try {
-    await loadPromoCatalog();
+    await Promise.all([
+      loadPromoCatalog(),
+      loadStorefrontSettings()
+    ]);
   } catch (error) {
     promoCatalog = [];
   }
