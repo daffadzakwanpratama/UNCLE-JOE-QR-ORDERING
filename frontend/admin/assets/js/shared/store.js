@@ -204,6 +204,8 @@ function initAdminLayout(currentPage = '') {
     window.AdminUi?.initAdminIcons?.();
     // Render top bar after icons so avatar initial can be set
     window.AdminUi?.renderAdminTopBar?.(currentPage);
+    // Initialize mute buttons
+    window.AdminUi?.initMuteButtons?.();
 }
 
 async function initAdminGuards() {

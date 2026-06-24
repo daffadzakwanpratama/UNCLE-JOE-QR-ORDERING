@@ -255,6 +255,11 @@ function renderAdminTopBar(currentPage = '') {
                 <small>Admin Panel</small>
             </span>
         </a>
+        <div class="admin-topbar-actions" style="margin-left: auto;">
+            <button type="button" class="admin-icon-button dashboard-mute-button" title="Atur Suara Notifikasi" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast) var(--ease-out); border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.05); color: currentColor; flex-shrink: 0;">
+                <span class="dashboard-mute-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: currentColor;"></span>
+            </button>
+        </div>
     `.trim();
 
     content.insertBefore(bar, content.firstChild);
@@ -324,6 +329,9 @@ function renderAdminSidebar(currentPage = '') {
                     <small>Admin Panel</small>
                 </span>
             </a>
+            <button type="button" class="admin-icon-button dashboard-mute-button" title="Atur Suara Notifikasi" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast) var(--ease-out); border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.05); color: currentColor; flex-shrink: 0; margin-left: auto; margin-right: 8px;">
+                <span class="dashboard-mute-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; color: currentColor;"></span>
+            </button>
             <button class="admin-sidebar-close" id="adminSidebarClose" aria-label="Tutup Menu" title="Tutup Menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -686,6 +694,168 @@ function printReceipt(order) {
     }
 }
 
+function showAdminToast(message, isSuccess = true) {
+    let container = document.getElementById('adminToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'adminToastContainer';
+        container.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: var(--bg-surface);
+        border: 1px solid ${isSuccess ? 'rgba(52, 211, 153, 0.2)' : 'rgba(248, 113, 113, 0.2)'};
+        color: ${isSuccess ? 'var(--accent-green)' : 'var(--accent-red)'};
+        padding: 12px 18px;
+        border-radius: var(--r-sm);
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    `;
+    
+    const icon = isSuccess ? '🔊' : '🔇';
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    
+    container.appendChild(toast);
+    
+    requestAnimationFrame(() => {
+        toast.style.transform = 'translateY(0)';
+        toast.style.opacity = '1';
+    });
+    
+    setTimeout(() => {
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 2500);
+}
+
+function playAdminNotificationSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const playChime = (frequency, startTime, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(frequency, startTime);
+            
+            gain.gain.setValueAtTime(0.25, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+        
+        const now = ctx.currentTime;
+        playChime(1318.51, now, 0.4);
+        playChime(1760.00, now + 0.12, 0.6);
+    } catch (e) {
+        console.warn("Gagal memutar notifikasi suara:", e);
+    }
+}
+
+function initMuteButtons() {
+    const muteButtons = document.querySelectorAll('.dashboard-mute-button');
+    const muteIcons = document.querySelectorAll('.dashboard-mute-icon');
+    if (muteButtons.length === 0) return;
+
+    const SOUND_ACTIVE_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+    const SOUND_MUTED_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+
+    let isMuted = false;
+    try {
+        isMuted = window.localStorage.getItem('qr-admin-dashboard-sound-muted') === 'true';
+    } catch (e) {}
+
+    function updateMuteButtonUi() {
+        muteIcons.forEach((muteIcon) => {
+            muteIcon.innerHTML = isMuted ? SOUND_MUTED_SVG : SOUND_ACTIVE_SVG;
+        });
+
+        muteButtons.forEach((muteButton) => {
+            if (isMuted) {
+                muteButton.style.background = 'rgba(248, 113, 113, 0.06)';
+                muteButton.style.color = 'var(--accent-red)';
+                muteButton.style.borderColor = 'rgba(248, 113, 113, 0.22)';
+            } else {
+                muteButton.style.background = 'rgba(52, 211, 153, 0.06)';
+                muteButton.style.color = 'var(--accent-green)';
+                muteButton.style.borderColor = 'rgba(52, 211, 153, 0.22)';
+            }
+        });
+    }
+
+    updateMuteButtonUi();
+
+    muteButtons.forEach((muteButton) => {
+        const newButton = muteButton.cloneNode(true);
+        muteButton.parentNode.replaceChild(newButton, muteButton);
+        
+        newButton.addEventListener('click', () => {
+            try {
+                isMuted = window.localStorage.getItem('qr-admin-dashboard-sound-muted') === 'true';
+            } catch (e) {}
+            
+            isMuted = !isMuted;
+            
+            try {
+                window.localStorage.setItem('qr-admin-dashboard-sound-muted', String(isMuted));
+            } catch (e) {}
+            
+            const allMuteButtons = document.querySelectorAll('.dashboard-mute-button');
+            const allMuteIcons = document.querySelectorAll('.dashboard-mute-icon');
+            
+            allMuteIcons.forEach((muteIcon) => {
+                muteIcon.innerHTML = isMuted ? SOUND_MUTED_SVG : SOUND_ACTIVE_SVG;
+            });
+
+            allMuteButtons.forEach((btn) => {
+                if (isMuted) {
+                    btn.style.background = 'rgba(248, 113, 113, 0.06)';
+                    btn.style.color = 'var(--accent-red)';
+                    btn.style.borderColor = 'rgba(248, 113, 113, 0.22)';
+                } else {
+                    btn.style.background = 'rgba(52, 211, 153, 0.06)';
+                    btn.style.color = 'var(--accent-green)';
+                    btn.style.borderColor = 'rgba(52, 211, 153, 0.22)';
+                }
+            });
+
+            if (isMuted) {
+                showAdminToast("Suara notifikasi dimatikan", false);
+            } else {
+                showAdminToast("Suara notifikasi aktif", true);
+                playAdminNotificationSound();
+            }
+        });
+    });
+}
+
 function initAdminIcons() {
     document.querySelectorAll('[data-admin-icon]').forEach((element) => {
         const iconMarkup = ADMIN_ICONS[element.dataset.adminIcon];
@@ -703,6 +873,7 @@ window.AdminUi = {
     renderAdminPanelHead,
     initAdminIcons,
     printReceipt,
+    initMuteButtons,
 };
 
 

@@ -1,16 +1,12 @@
 const DASHBOARD_CLEARED_ORDERS_KEY = 'qr-admin-dashboard-cleared-orders';
 const DASHBOARD_SOUND_MUTED_KEY = 'qr-admin-dashboard-sound-muted';
 let searchQuery = '';
-let isMuted = false;
-
-try {
-    isMuted = window.localStorage.getItem(DASHBOARD_SOUND_MUTED_KEY) === 'true';
-} catch (e) {
-    isMuted = false;
-}
-
 function playNotificationSound() {
-    if (isMuted) return;
+    let muted = false;
+    try {
+        muted = window.localStorage.getItem(DASHBOARD_SOUND_MUTED_KEY) === 'true';
+    } catch (e) {}
+    if (muted) return;
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
@@ -54,35 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const transactionList = document.getElementById('dashboardTransactionList');
     const clearButton = document.getElementById('clearDashboardTransactionsButton');
     const searchInput = document.getElementById('dashboardOrderSearchInput');
-    const muteButton = document.getElementById('dashboardMuteButton');
-    const muteIcon = document.getElementById('dashboardMuteIcon');
-    const muteText = document.getElementById('dashboardMuteText');
-
-    function updateMuteButtonUi() {
-        if (muteIcon) muteIcon.textContent = isMuted ? '🔇' : '🔊';
-        if (muteText) muteText.textContent = isMuted ? 'Suara Senyap' : 'Suara Aktif';
-        if (muteButton) {
-            if (isMuted) {
-                muteButton.style.opacity = '0.65';
-            } else {
-                muteButton.style.opacity = '1';
-            }
-        }
-    }
-
-    if (muteButton) {
-        updateMuteButtonUi();
-        muteButton.addEventListener('click', () => {
-            isMuted = !isMuted;
-            try {
-                window.localStorage.setItem(DASHBOARD_SOUND_MUTED_KEY, String(isMuted));
-            } catch (e) {}
-            updateMuteButtonUi();
-            if (!isMuted) {
-                playNotificationSound();
-            }
-        });
-    }
 
     if (adminUsername && session?.username) adminUsername.textContent = session.username;
 

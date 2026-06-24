@@ -355,11 +355,17 @@ async function loadMidtransSnapScript() {
 async function initCheckoutPage() {
   try {
     await Promise.all([
-      loadPromoCatalog(),
-      loadStorefrontSettings()
+      loadPromoCatalog().catch((err) => {
+        console.warn("Gagal memuat katalog promo:", err);
+        return [];
+      }),
+      loadStorefrontSettings().catch((err) => {
+        console.warn("Gagal memuat pengaturan toko:", err);
+        return null;
+      })
     ]);
   } catch (error) {
-    promoCatalog = [];
+    console.error("Gagal inisialisasi halaman checkout:", error);
   }
 
   try {

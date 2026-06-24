@@ -13,8 +13,7 @@ const {
 
 const router = express.Router();
 
-const SERVICE_FEE_AMOUNT = 2000;
-const TAX_RATE = 0.1;
+const DEFAULT_SERVICE_FEE = 2000;
 const ORDER_STATUS_FLOW = {
   received: "preparing",
   preparing: "ready",
@@ -23,12 +22,22 @@ const ORDER_STATUS_FLOW = {
 const ORDER_NUMBER_PREFIX = "ORD";
 const ORDER_NUMBER_MAX_RETRIES = 5;
 
-function calculateServiceFee(subtotal) {
-  return subtotal > 0 ? SERVICE_FEE_AMOUNT : 0;
-}
+async function getOrderSettings() {
+  try {
+    const settingsRows = await query(`SELECT key, value FROM settings`);
+    const settings = {};
+    settingsRows.forEach((row) => {
+      settings[row.key] = row.value;
+    });
 
-function calculateTaxAmount(subtotal) {
-  return subtotal > 0 ? Math.round(subtotal * TAX_RATE) : 0;
+    return {
+      taxPercent: settings.tax_percent !== undefined ? Number(settings.tax_percent) : 10,
+      serviceFee: settings.service_fee !== undefined ? Number(settings.service_fee) : DEFAULT_SERVICE_FEE,
+    };
+  } catch (error) {
+    console.error("Gagal memuat pengaturan toko untuk kalkulasi order:", error);
+    return { taxPercent: 10, serviceFee: DEFAULT_SERVICE_FEE };
+  }
 }
 
 function calculateDiscountAmount(discount, subtotal) {
@@ -560,9 +569,10 @@ router.post("/", asyncHandler(async (request, response) => {
     };
   });
 
+  const orderSettings = await getOrderSettings();
   const computedSubtotal = computedItems.reduce((sum, item) => sum + item.lineTotal, 0);
-  const computedServiceFee = calculateServiceFee(computedSubtotal);
-  const computedTaxAmount = calculateTaxAmount(computedSubtotal);
+  const computedServiceFee = computedSubtotal > 0 ? orderSettings.serviceFee : 0;
+  const computedTaxAmount = computedSubtotal > 0 ? Math.round(computedSubtotal * (orderSettings.taxPercent / 100)) : 0;
 
   let appliedPromoCode = "";
   let computedDiscountAmount = 0;
@@ -777,7 +787,7 @@ router.post("/", asyncHandler(async (request, response) => {
               id: "TAX",
               price: computedTaxAmount,
               quantity: 1,
-              name: "Pajak (10%)",
+              name: `Pajak (${orderSettings.taxPercent}%)`,
             }] : []
           ).concat(
             computedDiscountAmount > 0 ? [{
