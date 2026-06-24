@@ -2036,7 +2036,7 @@ html:has(body.admin-modal-open) {
 }
 
 .admin-transaction-card.is-new {
-    animation: new-order-flash 2s ease-in-out 3;
+    animation: new-order-flash 2s ease-in-out infinite;
 }
 
 @keyframes new-order-flash {

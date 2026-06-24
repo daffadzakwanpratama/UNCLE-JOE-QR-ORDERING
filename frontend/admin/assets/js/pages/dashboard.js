@@ -1,7 +1,6 @@
 const DASHBOARD_CLEARED_ORDERS_KEY = 'qr-admin-dashboard-cleared-orders';
 const DASHBOARD_SOUND_MUTED_KEY = 'qr-admin-dashboard-sound-muted';
 let searchQuery = '';
-const newOrderNumbers = new Set();
 let isMuted = false;
 
 try {
@@ -257,17 +256,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const newlyAddedOrders = freshOrders.filter(o => o?.orderNumber && !oldOrderNumbers.has(o.orderNumber));
                 
                 if (newlyAddedOrders.length > 0) {
-                    newlyAddedOrders.forEach(o => {
-                        newOrderNumbers.add(o.orderNumber);
-                        window.setTimeout(() => {
-                            newOrderNumbers.delete(o.orderNumber);
-                            const el = document.querySelector(`[data-order-card="${o.orderNumber}"]`);
-                            if (el) {
-                                el.classList.remove('is-new');
-                            }
-                        }, 8000);
-                    });
-                    
                     playNotificationSound();
                 }
                 
@@ -353,7 +341,7 @@ function renderTransactionList(container, orders) {
             }
         }
 
-        const isNewClass = newOrderNumbers.has(transaction.orderNumber) ? ' is-new' : '';
+        const isNewClass = String(transaction.status || 'received').toLowerCase() === 'received' ? ' is-new' : '';
         return `
             <article class="admin-transaction-card${isNewClass}" data-order-card="${transaction.orderNumber}">
                 <div class="admin-transaction-top">
