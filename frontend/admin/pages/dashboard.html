@@ -15,11 +15,15 @@
 
             <section class="admin-summary-grid" data-admin-summary></section>
 
-            <div class="admin-toolbar" style="margin-bottom: 20px; display: flex; width: 100%;">
-                <label class="admin-field" style="flex: 1; width: 100%;">
+            <div class="admin-toolbar" style="margin-bottom: 20px; display: flex; width: 100%; align-items: flex-end; gap: 12px;">
+                <label class="admin-field" style="flex: 1; width: 100%; margin-bottom: 0;">
                     <span>Cari atau Scan Tiket Pesanan</span>
                     <input type="text" id="dashboardOrderSearchInput" placeholder="Ketik atau scan QR Code tiket pesanan (Contoh: ORD-130626-004)..." autocomplete="off" style="width: 100%; border: 1px solid rgba(255, 255, 255, 0.11); border-radius: var(--r-sm); padding: 12px 14px; background: rgba(255, 255, 255, 0.04); color: var(--text);">
                 </label>
+                <button type="button" class="admin-secondary-button" id="dashboardMuteButton" title="Atur Suara Notifikasi" style="height: 47px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; border-radius: var(--r-sm);">
+                    <span id="dashboardMuteIcon">🔊</span>
+                    <span id="dashboardMuteText">Suara Aktif</span>
+                </button>
             </div>
 
             <section class="admin-panel is-panel-tinted">

@@ -183,8 +183,8 @@ class BannerPage {
             this.bannerTitleInput.value = banner.title || '';
             this.bannerSubtitleInput.value = banner.subtitle || '';
             this.bannerLinkInput.value = banner.linkUrl || '';
-            this.bannerStartDateInput.value = banner.startDate || '';
-            this.bannerEndDateInput.value = banner.endDate || '';
+            this.bannerStartDateInput.value = banner.startDate ? this.getLocalDateString(banner.startDate) : '';
+            this.bannerEndDateInput.value = banner.endDate ? this.getLocalDateString(banner.endDate) : '';
             this.bannerSortOrderInput.value = String(Number(banner.sortOrder || 1));
             this.bannerActiveInput.checked = Boolean(Number(banner.isActive) || banner.isActive);
             this.currentImageData = banner.imageUrl || '';
@@ -274,9 +274,25 @@ class BannerPage {
         this.bannerImagePreview.src = this.currentImageData || AdminStore.getMenuPlaceholder('BN');
     }
 
+    formatDateFriendly(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = d.getDate();
+        const months = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+            'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
+        ];
+        const monthLabel = months[d.getMonth()];
+        const year = d.getFullYear();
+        return `${day} ${monthLabel} ${year}`;
+    }
+
     formatPeriod(startDate, endDate) {
         if (!startDate && !endDate) return '-';
-        return `${startDate || '-'} s/d ${endDate || '-'}`;
+        const startFormatted = startDate ? this.formatDateFriendly(startDate) : '-';
+        const endFormatted = endDate ? this.formatDateFriendly(endDate) : '-';
+        return `${startFormatted} s/d ${endFormatted}`;
     }
 
     escapeHtml(value) {

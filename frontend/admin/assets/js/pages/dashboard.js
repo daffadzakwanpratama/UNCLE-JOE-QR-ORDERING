@@ -1,5 +1,46 @@
 const DASHBOARD_CLEARED_ORDERS_KEY = 'qr-admin-dashboard-cleared-orders';
+const DASHBOARD_SOUND_MUTED_KEY = 'qr-admin-dashboard-sound-muted';
 let searchQuery = '';
+const newOrderNumbers = new Set();
+let isMuted = false;
+
+try {
+    isMuted = window.localStorage.getItem(DASHBOARD_SOUND_MUTED_KEY) === 'true';
+} catch (e) {
+    isMuted = false;
+}
+
+function playNotificationSound() {
+    if (isMuted) return;
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const playChime = (frequency, startTime, duration) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(frequency, startTime);
+            
+            gain.gain.setValueAtTime(0.25, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(startTime);
+            osc.stop(startTime + duration);
+        };
+        
+        const now = ctx.currentTime;
+        playChime(1318.51, now, 0.4);
+        playChime(1760.00, now + 0.12, 0.6);
+    } catch (e) {
+        console.warn("Gagal memutar notifikasi suara pesanan baru:", e);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     await AdminStore.waitUntilReady?.();
@@ -14,6 +55,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     const transactionList = document.getElementById('dashboardTransactionList');
     const clearButton = document.getElementById('clearDashboardTransactionsButton');
     const searchInput = document.getElementById('dashboardOrderSearchInput');
+    const muteButton = document.getElementById('dashboardMuteButton');
+    const muteIcon = document.getElementById('dashboardMuteIcon');
+    const muteText = document.getElementById('dashboardMuteText');
+
+    function updateMuteButtonUi() {
+        if (muteIcon) muteIcon.textContent = isMuted ? '🔇' : '🔊';
+        if (muteText) muteText.textContent = isMuted ? 'Suara Senyap' : 'Suara Aktif';
+        if (muteButton) {
+            if (isMuted) {
+                muteButton.style.opacity = '0.65';
+            } else {
+                muteButton.style.opacity = '1';
+            }
+        }
+    }
+
+    if (muteButton) {
+        updateMuteButtonUi();
+        muteButton.addEventListener('click', () => {
+            isMuted = !isMuted;
+            try {
+                window.localStorage.setItem(DASHBOARD_SOUND_MUTED_KEY, String(isMuted));
+            } catch (e) {}
+            updateMuteButtonUi();
+            if (!isMuted) {
+                playNotificationSound();
+            }
+        });
+    }
 
     if (adminUsername && session?.username) adminUsername.textContent = session.username;
 
@@ -182,6 +252,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const freshOrders = await AdminStore.api.fetchOrders();
                 
+                // Check if any genuinely new orders have arrived since last load
+                const oldOrderNumbers = new Set(orders.map(o => o.orderNumber));
+                const newlyAddedOrders = freshOrders.filter(o => o?.orderNumber && !oldOrderNumbers.has(o.orderNumber));
+                
+                if (newlyAddedOrders.length > 0) {
+                    newlyAddedOrders.forEach(o => {
+                        newOrderNumbers.add(o.orderNumber);
+                        window.setTimeout(() => {
+                            newOrderNumbers.delete(o.orderNumber);
+                            const el = document.querySelector(`[data-order-card="${o.orderNumber}"]`);
+                            if (el) {
+                                el.classList.remove('is-new');
+                            }
+                        }, 8000);
+                    });
+                    
+                    playNotificationSound();
+                }
+                
                 // Check if any order's status, paymentStatus, or orderNumber has changed
                 const hasChanged = freshOrders.length !== orders.length || freshOrders.some((newOrder, index) => {
                     const oldOrder = orders[index];
@@ -264,8 +353,9 @@ function renderTransactionList(container, orders) {
             }
         }
 
+        const isNewClass = newOrderNumbers.has(transaction.orderNumber) ? ' is-new' : '';
         return `
-            <article class="admin-transaction-card">
+            <article class="admin-transaction-card${isNewClass}" data-order-card="${transaction.orderNumber}">
                 <div class="admin-transaction-top">
                     <strong>${escapeHtml(transaction.orderNumber)}</strong>
                     <span class="admin-transaction-badge ${getTransactionBadgeClass(transaction.status)}">${escapeHtml(transaction.status || 'received')}</span>

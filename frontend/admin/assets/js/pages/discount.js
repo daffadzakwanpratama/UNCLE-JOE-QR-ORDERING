@@ -80,10 +80,10 @@ class DiscountPage {
     }
 
     renderSummary() {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = this.getLocalDateString(new Date());
         const activeDiscounts = this.discounts.filter((discount) => {
-            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
-            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+            const startDateOnly = discount.startDate ? this.getLocalDateString(discount.startDate) : null;
+            const endDateOnly = discount.endDate ? this.getLocalDateString(discount.endDate) : null;
 
             const isActive = Boolean(Number(discount.isActive) || discount.isActive);
             const isExpired = endDateOnly && endDateOnly < today;
@@ -102,11 +102,11 @@ class DiscountPage {
     getFilteredDiscounts() {
         const type = this.typeFilter?.value || 'all';
         const status = this.statusFilter?.value || 'all';
-        const today = new Date().toISOString().slice(0, 10);
+        const today = this.getLocalDateString(new Date());
 
         return this.discounts.filter((discount) => {
-            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
-            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+            const startDateOnly = discount.startDate ? this.getLocalDateString(discount.startDate) : null;
+            const endDateOnly = discount.endDate ? this.getLocalDateString(discount.endDate) : null;
 
             const isActive = Boolean(Number(discount.isActive) || discount.isActive);
             const isExpired = endDateOnly && endDateOnly < today;
@@ -142,11 +142,11 @@ class DiscountPage {
             return;
         }
 
-        const today = new Date().toISOString().slice(0, 10);
+        const today = this.getLocalDateString(new Date());
 
         this.tableBody.innerHTML = discounts.map((discount) => {
-            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
-            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+            const startDateOnly = discount.startDate ? this.getLocalDateString(discount.startDate) : null;
+            const endDateOnly = discount.endDate ? this.getLocalDateString(discount.endDate) : null;
 
             const isActive = Boolean(Number(discount.isActive) || discount.isActive);
             const isExpired = endDateOnly && endDateOnly < today;
@@ -209,8 +209,8 @@ class DiscountPage {
             this.discountMinPurchaseInput.value = String(Number(discount.minPurchase || 0));
             this.discountMaxDiscountInput.value = String(Number(discount.maxDiscount || 0));
             this.discountUsageLimitInput.value = String(Number(discount.usageLimit || 0));
-            this.discountStartDateInput.value = discount.startDate || '';
-            this.discountEndDateInput.value = discount.endDate || '';
+            this.discountStartDateInput.value = discount.startDate ? this.getLocalDateString(discount.startDate) : '';
+            this.discountEndDateInput.value = discount.endDate ? this.getLocalDateString(discount.endDate) : '';
             this.discountDescriptionInput.value = discount.description || '';
             this.discountActiveInput.checked = Boolean(Number(discount.isActive) || discount.isActive);
         } else {
@@ -288,9 +288,35 @@ class DiscountPage {
         return AdminStore.formatAdminCurrency(Number(discount.discountValue || 0));
     }
 
+    getLocalDateString(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    formatDateFriendly(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const day = d.getDate();
+        const months = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+            'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'
+        ];
+        const monthLabel = months[d.getMonth()];
+        const year = d.getFullYear();
+        return `${day} ${monthLabel} ${year}`;
+    }
+
     formatPeriod(startDate, endDate) {
         if (!startDate && !endDate) return '-';
-        return `${startDate || '-'} s/d ${endDate || '-'}`;
+        const startFormatted = startDate ? this.formatDateFriendly(startDate) : '-';
+        const endFormatted = endDate ? this.formatDateFriendly(endDate) : '-';
+        return `${startFormatted} s/d ${endFormatted}`;
     }
 
     escapeHtml(value) {
