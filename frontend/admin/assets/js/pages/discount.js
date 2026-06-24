@@ -80,7 +80,19 @@ class DiscountPage {
     }
 
     renderSummary() {
-        const activeDiscounts = this.discounts.filter((discount) => Boolean(Number(discount.isActive) || discount.isActive)).length;
+        const today = new Date().toISOString().slice(0, 10);
+        const activeDiscounts = this.discounts.filter((discount) => {
+            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
+            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+
+            const isActive = Boolean(Number(discount.isActive) || discount.isActive);
+            const isExpired = endDateOnly && endDateOnly < today;
+            const isNotStarted = startDateOnly && startDateOnly > today;
+            const isQuotaFull = Number(discount.usageLimit || 0) > 0 && Number(discount.usedCount || 0) >= Number(discount.usageLimit || 0);
+
+            return isActive && !isExpired && !isNotStarted && !isQuotaFull;
+        }).length;
+
         const totalUsed = this.discounts.reduce((sum, discount) => sum + Number(discount.usedCount || 0), 0);
         if (this.totalCount) this.totalCount.textContent = String(this.discounts.length);
         if (this.activeCount) this.activeCount.textContent = String(activeDiscounts);
@@ -93,11 +105,19 @@ class DiscountPage {
         const today = new Date().toISOString().slice(0, 10);
 
         return this.discounts.filter((discount) => {
+            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
+            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+
             const isActive = Boolean(Number(discount.isActive) || discount.isActive);
-            const isExpired = discount.endDate && discount.endDate < today;
+            const isExpired = endDateOnly && endDateOnly < today;
+            const isNotStarted = startDateOnly && startDateOnly > today;
+            const isQuotaFull = Number(discount.usageLimit || 0) > 0 && Number(discount.usedCount || 0) >= Number(discount.usageLimit || 0);
+
+            const isReallyActive = isActive && !isExpired && !isNotStarted && !isQuotaFull;
 
             if (type !== 'all' && discount.type !== type) return false;
-            if (status === 'active' && !isActive) return false;
+            
+            if (status === 'active' && !isReallyActive) return false;
             if (status === 'inactive' && isActive) return false;
             if (status === 'expired' && !isExpired) return false;
             return true;
@@ -122,10 +142,33 @@ class DiscountPage {
             return;
         }
 
+        const today = new Date().toISOString().slice(0, 10);
+
         this.tableBody.innerHTML = discounts.map((discount) => {
+            const startDateOnly = discount.startDate ? discount.startDate.slice(0, 10) : null;
+            const endDateOnly = discount.endDate ? discount.endDate.slice(0, 10) : null;
+
             const isActive = Boolean(Number(discount.isActive) || discount.isActive);
-            const statusLabel = isActive ? 'Aktif' : 'Nonaktif';
-            const statusClass = isActive ? 'is-success' : 'is-muted';
+            const isExpired = endDateOnly && endDateOnly < today;
+            const isNotStarted = startDateOnly && startDateOnly > today;
+            const isQuotaFull = Number(discount.usageLimit || 0) > 0 && Number(discount.usedCount || 0) >= Number(discount.usageLimit || 0);
+
+            let statusLabel = 'Aktif';
+            let statusClass = 'is-success';
+
+            if (!isActive) {
+                statusLabel = 'Nonaktif';
+                statusClass = 'is-muted';
+            } else if (isNotStarted) {
+                statusLabel = 'Terjadwal';
+                statusClass = 'is-warning';
+            } else if (isExpired) {
+                statusLabel = 'Kedaluwarsa';
+                statusClass = 'is-muted';
+            } else if (isQuotaFull) {
+                statusLabel = 'Habis';
+                statusClass = 'is-muted';
+            }
 
             return `
                 <tr>
