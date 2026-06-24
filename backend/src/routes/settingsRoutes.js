@@ -50,12 +50,10 @@ router.put("/", requireAdminAuth, asyncHandler(async (request, response) => {
 
   const pool = getPool();
   await pool.execute(
-    `UPDATE settings SET value = ? WHERE key = 'tax_percent'`,
-    [String(taxNum)]
-  );
-  await pool.execute(
-    `UPDATE settings SET value = ? WHERE key = 'service_fee'`,
-    [String(serviceFeeNum)]
+    `INSERT INTO settings (key, value) VALUES ('tax_percent', ?), ('service_fee', ?)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+     RETURNING key`,
+    [String(taxNum), String(serviceFeeNum)]
   );
 
   response.json({

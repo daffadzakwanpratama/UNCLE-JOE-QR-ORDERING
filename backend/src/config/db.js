@@ -346,7 +346,8 @@ async function migrateDatabase() {
       await getPool().execute(
         `INSERT INTO settings (key, value) VALUES 
          ('tax_percent', '10'),
-         ('service_fee', '2000')`
+         ('service_fee', '2000')
+         RETURNING key`
       );
       console.log("Database migration successful: 'settings' table created and seeded.");
     }
