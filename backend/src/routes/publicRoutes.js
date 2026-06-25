@@ -3,6 +3,15 @@ const { query, testConnection } = require("../config/db");
 const { formatDateOnly } = require("../utils/date");
 const { asyncHandler } = require("../utils/asyncHandler");
 
+const { createRateLimiter } = require("../middlewares/publicRateLimit");
+
+const discountValidateRateLimit = createRateLimiter({
+  windowMs: 1 * 60 * 1000, // 1 menit
+  maxRequests: 15,
+  message: "Terlalu banyak mencoba kode promo. Silakan coba lagi setelah satu menit.",
+  keyPrefix: "promo_validate",
+});
+
 const router = express.Router();
 
 
@@ -113,7 +122,7 @@ router.get("/discounts", asyncHandler(async (request, response) => {
   });
 }));
 
-router.get("/discounts/validate/:code", asyncHandler(async (request, response) => {
+router.get("/discounts/validate/:code", discountValidateRateLimit, asyncHandler(async (request, response) => {
   const code = String(request.params.code || "").trim().toUpperCase();
 
   if (!code) {

@@ -179,4 +179,130 @@ router.post("/admin/logout", asyncHandler(async (request, response) => {
   });
 }));
 
+router.get("/admin/users", requireAdminAuth, asyncHandler(async (request, response) => {
+  const admins = await query(
+    `SELECT id, username, full_name AS "fullName", role, created_at AS "createdAt"
+     FROM admins
+     ORDER BY username ASC`
+  );
+  response.json({
+    success: true,
+    data: admins,
+  });
+}));
+
+router.post("/admin/users", requireAdminAuth, asyncHandler(async (request, response) => {
+  if (request.admin.role !== "admin") {
+    return response.status(403).json({
+      success: false,
+      message: "Akses ditolak. Hanya Administrator yang dapat menambahkan pengguna baru.",
+    });
+  }
+
+  const username = requireNonEmptyString(request.body?.username, "Username wajib diisi.", { maxLength: 50 });
+  const fullName = requireNonEmptyString(request.body?.fullName, "Nama lengkap wajib diisi.", { maxLength: 100 });
+  const password = requireNonEmptyString(request.body?.password, "Password wajib diisi.", { maxLength: 255 });
+  const role = requireNonEmptyString(request.body?.role, "Role wajib diisi.", { maxLength: 30 });
+
+  const existing = await query(
+    `SELECT id FROM admins WHERE username = :username LIMIT 1`,
+    { username }
+  );
+
+  if (existing.length > 0) {
+    return response.status(400).json({
+      success: false,
+      message: "Username sudah digunakan.",
+    });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query(
+    `INSERT INTO admins (username, full_name, password_hash, role)
+     VALUES (:username, :fullName, :passwordHash, :role)`,
+    { username, fullName, passwordHash, role }
+  );
+
+  response.json({
+    success: true,
+    message: "Pengguna admin berhasil ditambahkan.",
+  });
+}));
+
+router.put("/admin/users/:id/password", requireAdminAuth, asyncHandler(async (request, response) => {
+  const targetId = Number(request.params.id);
+  const password = requireNonEmptyString(request.body?.password, "Password baru wajib diisi.", { maxLength: 255 });
+
+  if (request.admin.role !== "admin" && Number(request.admin.sub) !== targetId) {
+    return response.status(403).json({
+      success: false,
+      message: "Akses ditolak. Anda hanya dapat mengubah password Anda sendiri.",
+    });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query(
+    `UPDATE admins
+     SET password_hash = :passwordHash, updated_at = CURRENT_TIMESTAMP
+     WHERE id = :targetId`,
+    { passwordHash, targetId }
+  );
+
+  response.json({
+    success: true,
+    message: "Password berhasil diperbarui.",
+  });
+}));
+
+router.put("/admin/users/:id/role", requireAdminAuth, asyncHandler(async (request, response) => {
+  if (request.admin.role !== "admin") {
+    return response.status(403).json({
+      success: false,
+      message: "Akses ditolak. Hanya Administrator yang dapat mengubah role.",
+    });
+  }
+
+  const targetId = Number(request.params.id);
+  const role = requireNonEmptyString(request.body?.role, "Role wajib diisi.", { maxLength: 30 });
+
+  await query(
+    `UPDATE admins
+     SET role = :role, updated_at = CURRENT_TIMESTAMP
+     WHERE id = :targetId`,
+    { role, targetId }
+  );
+
+  response.json({
+    success: true,
+    message: "Role pengguna berhasil diperbarui.",
+  });
+}));
+
+router.delete("/admin/users/:id", requireAdminAuth, asyncHandler(async (request, response) => {
+  if (request.admin.role !== "admin") {
+    return response.status(403).json({
+      success: false,
+      message: "Akses ditolak. Hanya Administrator yang dapat menghapus pengguna.",
+    });
+  }
+
+  const targetId = Number(request.params.id);
+  if (Number(request.admin.sub) === targetId) {
+    return response.status(400).json({
+      success: false,
+      message: "Anda tidak dapat menghapus akun Anda sendiri.",
+    });
+  }
+
+  await query(
+    `DELETE FROM admins WHERE id = :targetId`,
+    { targetId }
+  );
+
+  response.json({
+    success: true,
+    message: "Pengguna admin berhasil dihapus.",
+  });
+}));
+
 module.exports = router;

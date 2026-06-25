@@ -216,7 +216,47 @@ async function updateSettingsWithApi(settings) {
   return payload.data;
 }
 
+async function fetchAdminsFromApi() {
+  const payload = await getAdminApiClient().request("/auth/admin/users");
+  return Array.isArray(payload.data) ? payload.data : [];
+}
+
+async function createAdminUserWithApi(user) {
+  const payload = await getAdminApiClient().request("/auth/admin/users", {
+    method: "POST",
+    body: JSON.stringify(user),
+  });
+  return payload.data;
+}
+
+async function updateAdminPasswordWithApi(id, password) {
+  const payload = await getAdminApiClient().request(`/auth/admin/users/${id}/password`, {
+    method: "PUT",
+    body: JSON.stringify({ password }),
+  });
+  return payload.data;
+}
+
+async function updateAdminRoleWithApi(id, role) {
+  const payload = await getAdminApiClient().request(`/auth/admin/users/${id}/role`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+  return payload.data;
+}
+
+async function deleteAdminUserWithApi(id) {
+  return getAdminApiClient().request(`/auth/admin/users/${id}`, {
+    method: "DELETE",
+  });
+}
+
 window.AdminApi = {
+  fetchAdmins: fetchAdminsFromApi,
+  createAdminUser: createAdminUserWithApi,
+  updateAdminPassword: updateAdminPasswordWithApi,
+  updateAdminRole: updateAdminRoleWithApi,
+  deleteAdminUser: deleteAdminUserWithApi,
   loginAdmin: loginAdminWithApi,
   fetchAdminSession: fetchAdminSessionFromApi,
   logoutAdmin: logoutAdminWithApi,

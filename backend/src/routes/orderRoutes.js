@@ -11,6 +11,14 @@ const {
   badRequest,
 } = require("../utils/validation");
 const { notifyStatusChange, notifyNewOrder } = require("../utils/websocket");
+const { createRateLimiter } = require("../middlewares/publicRateLimit");
+
+const orderRateLimit = createRateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 menit
+  maxRequests: 5,
+  message: "Terlalu banyak pesanan dibuat dari IP ini. Silakan coba lagi beberapa menit lagi atau hubungi kasir/barista.",
+  keyPrefix: "order",
+});
 
 const router = express.Router();
 
@@ -475,7 +483,7 @@ router.patch("/:orderNumber/payment-status", requireAdminAuth, asyncHandler(asyn
   });
 }));
 
-router.post("/", asyncHandler(async (request, response) => {
+router.post("/", orderRateLimit, asyncHandler(async (request, response) => {
   const {
     customerName = "",
     phoneNumber = "",

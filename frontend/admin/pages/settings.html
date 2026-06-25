@@ -39,7 +39,156 @@
                     </div>
                 </form>
             </section>
+
+            <section id="adminUsersSection" class="admin-panel is-panel-tinted is-hidden" style="margin-top: 32px;">
+                <div class="admin-panel-head">
+                    <div class="admin-panel-heading">
+                        <h2>Manajemen Pengguna Admin</h2>
+                        <p>Daftar akun admin yang memiliki akses ke panel ini.</p>
+                    </div>
+                    <div class="admin-panel-side">
+                        <button type="button" class="admin-primary-button" id="addAdminUserButton">Tambah Pengguna</button>
+                    </div>
+                </div>
+
+                <div class="admin-table-wrapper" style="margin-top: 20px;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Nama Lengkap</th>
+                                <th>Role</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Modal Tambah Admin -->
+    <div class="admin-modal-backdrop is-hidden" id="adminUserModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2>Tambah Pengguna Admin</h2>
+                    <p>Buat akun baru untuk staf Anda.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeAdminUserModal" aria-label="Tutup modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="adminUserForm" class="admin-form" novalidate>
+                <label class="admin-field">
+                    <span>Username</span>
+                    <input type="text" id="adminUserUsername" name="username" placeholder="Contoh: budi_kasir" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Nama Lengkap</span>
+                    <input type="text" id="adminUserFullName" name="fullName" placeholder="Contoh: Budi Santoso" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Password</span>
+                    <input type="password" id="adminUserPassword" name="password" placeholder="Minimal 6 karakter" required>
+                </label>
+
+                <label class="admin-field">
+                    <span>Role</span>
+                    <select id="adminUserRole" name="role" required>
+                        <option value="cashier">Kasir (Cashier)</option>
+                        <option value="barista">Barista</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </label>
+
+                <p class="admin-form-error" id="adminUserFormError" style="color: var(--accent-red); font-size: 0.88rem; font-weight: 500;"></p>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-secondary-button" id="cancelAdminUserButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ubah Password -->
+    <div class="admin-modal-backdrop is-hidden" id="changePasswordModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2>Ubah Password</h2>
+                    <p>Masukkan password baru untuk pengguna ini.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeChangePasswordModal" aria-label="Tutup modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="changePasswordForm" class="admin-form" novalidate>
+                <input type="hidden" id="changePasswordUserId">
+                
+                <label class="admin-field">
+                    <span>Password Baru</span>
+                    <input type="password" id="changePasswordInput" name="password" placeholder="Minimal 6 karakter" required>
+                </label>
+
+                <p class="admin-form-error" id="changePasswordFormError" style="color: var(--accent-red); font-size: 0.88rem; font-weight: 500;"></p>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-secondary-button" id="cancelChangePasswordButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Perbarui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ubah Role -->
+    <div class="admin-modal-backdrop is-hidden" id="changeRoleModal">
+        <div class="admin-modal">
+            <div class="admin-modal-head">
+                <div>
+                    <h2>Ubah Role Pengguna</h2>
+                    <p>Pilih tingkat akses baru untuk pengguna ini.</p>
+                </div>
+                <button type="button" class="admin-icon-button" id="closeChangeRoleModal" aria-label="Tutup modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="changeRoleForm" class="admin-form" novalidate>
+                <input type="hidden" id="changeRoleUserId">
+                
+                <label class="admin-field">
+                    <span>Pilih Role</span>
+                    <select id="changeRoleInput" name="role" required>
+                        <option value="cashier">Kasir (Cashier)</option>
+                        <option value="barista">Barista</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </label>
+
+                <p class="admin-form-error" id="changeRoleFormError" style="color: var(--accent-red); font-size: 0.88rem; font-weight: 500;"></p>
+
+                <div class="admin-form-actions">
+                    <button type="button" class="admin-secondary-button" id="cancelChangeRoleButton">Batal</button>
+                    <button type="submit" class="admin-primary-button">Perbarui</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="../../shared/assets/js/api/base-client.js"></script>

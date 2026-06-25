@@ -286,6 +286,11 @@ window.AdminStore = {
         clearOrders: window.AdminApi?.clearOrders,
         fetchSettings: window.AdminApi?.fetchSettings,
         updateSettings: window.AdminApi?.updateSettings,
+        fetchAdmins: window.AdminApi?.fetchAdmins,
+        createAdminUser: window.AdminApi?.createAdminUser,
+        updateAdminPassword: window.AdminApi?.updateAdminPassword,
+        updateAdminRole: window.AdminApi?.updateAdminRole,
+        deleteAdminUser: window.AdminApi?.deleteAdminUser,
     },
 };
 
