@@ -293,9 +293,70 @@ function renderStatusPage() {
   }
 }
 
+function connectStatusWebSocket(orderNumber, onStatusChangedFallback) {
+  let wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  let wsUrl = `${wsProtocol}//${window.location.host}`;
+  let ws = null;
+  let fallbackTriggered = false;
+
+  const triggerFallback = () => {
+    if (!fallbackTriggered) {
+      fallbackTriggered = true;
+      console.log("WebSocket disconnected or failed. Falling back to HTTP polling.");
+      onStatusChangedFallback();
+    }
+  };
+
+  try {
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected to status stream.");
+      ws.send(JSON.stringify({
+        type: "register",
+        role: "customer",
+        orderNumber: orderNumber
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "orderUpdated" && data.orderNumber === orderNumber) {
+          const currentLocalOrder = getActiveOrder();
+          const remoteStep = mapOrderStatusToStep(data.status);
+          
+          if (remoteStep !== currentLocalOrder?.currentStep || data.paymentStatus !== currentLocalOrder?.paymentStatus) {
+            saveActiveOrder({
+              ...currentLocalOrder,
+              currentStep: remoteStep,
+              paymentStatus: data.paymentStatus,
+            });
+            ws.close();
+            window.location.reload();
+          }
+        }
+      } catch (err) {
+        console.error("Gagal mengurai pesan WebSocket:", err);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.warn("WebSocket error:", err);
+      triggerFallback();
+    };
+
+    ws.onclose = () => {
+      triggerFallback();
+    };
+  } catch (e) {
+    console.warn("Gagal membuat koneksi WebSocket:", e);
+    triggerFallback();
+  }
+}
+
 async function initStatusPage() {
   const localOrder = getActiveOrder();
-
   if (localOrder?.orderNumber) {
     try {
       const remoteOrder = await fetchOrderByNumber(localOrder.orderNumber);
@@ -338,39 +399,43 @@ async function initStatusPage() {
   updateCartBadge();
   renderStatusPage();
 
-  // Auto-polling status pesanan dan status pembayaran selama pesanan masih aktif
+  // Auto-polling status pesanan dan status pembayaran sebagai fallback
   const activeOrder = getActiveOrder();
   if (activeOrder?.orderNumber) {
-    const statusInterval = window.setInterval(async () => {
-      try {
-        const remoteOrder = await fetchOrderByNumber(activeOrder.orderNumber);
-        if (remoteOrder) {
-          const currentLocalOrder = getActiveOrder();
-          const remoteStatus = remoteOrder.status;
-          const remotePaymentStatus = remoteOrder.paymentStatus;
-          
-          const localStep = currentLocalOrder?.currentStep;
-          const remoteStep = mapOrderStatusToStep(remoteStatus);
-          
-          const localPaymentStatus = currentLocalOrder?.paymentStatus;
-          
-          // Jika ada perubahan status pesanan atau status pembayaran
-          if (remoteStep !== localStep || remotePaymentStatus !== localPaymentStatus) {
-            saveActiveOrder({
-              ...currentLocalOrder,
-              currentStep: remoteStep,
-              paymentStatus: remotePaymentStatus,
-              paymentToken: remoteOrder.paymentToken || currentLocalOrder.paymentToken || null,
-            });
+    const startPollingFallback = () => {
+      const statusInterval = window.setInterval(async () => {
+        try {
+          const remoteOrder = await fetchOrderByNumber(activeOrder.orderNumber);
+          if (remoteOrder) {
+            const currentLocalOrder = getActiveOrder();
+            const remoteStatus = remoteOrder.status;
+            const remotePaymentStatus = remoteOrder.paymentStatus;
             
-            window.clearInterval(statusInterval);
-            window.location.reload(); // Reload untuk memperbarui tampilan halaman
+            const localStep = currentLocalOrder?.currentStep;
+            const remoteStep = mapOrderStatusToStep(remoteStatus);
+            
+            const localPaymentStatus = currentLocalOrder?.paymentStatus;
+            
+            // Jika ada perubahan status pesanan atau status pembayaran
+            if (remoteStep !== localStep || remotePaymentStatus !== localPaymentStatus) {
+              saveActiveOrder({
+                ...currentLocalOrder,
+                currentStep: remoteStep,
+                paymentStatus: remotePaymentStatus,
+                paymentToken: remoteOrder.paymentToken || currentLocalOrder.paymentToken || null,
+              });
+              
+              window.clearInterval(statusInterval);
+              window.location.reload(); // Reload untuk memperbarui tampilan halaman
+            }
           }
+        } catch (pollError) {
+          // Abaikan error koneksi saat polling
         }
-      } catch (pollError) {
-        // Abaikan error koneksi saat polling
-      }
-    }, 4000); // Poll setiap 4 detik
+      }, 4000); // Poll setiap 4 detik
+    };
+
+    connectStatusWebSocket(activeOrder.orderNumber, startPollingFallback);
   }
 }
 

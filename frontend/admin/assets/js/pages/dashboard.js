@@ -213,42 +213,101 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Set up auto-polling every 5 seconds to load new orders/status updates
-        const pollInterval = window.setInterval(async () => {
+        // Set up WebSockets with auto-polling fallback
+        let ws = null;
+        let fallbackTriggered = false;
+
+        const startPollingFallback = () => {
+            if (fallbackTriggered) return;
+            fallbackTriggered = true;
+            console.log("WebSocket disconnected or failed. Falling back to HTTP polling.");
+            
+            const pollInterval = window.setInterval(async () => {
+                try {
+                    const freshOrders = await AdminStore.api.fetchOrders();
+                    
+                    // Check if any genuinely new orders have arrived since last load
+                    const oldOrderNumbers = new Set(orders.map(o => o.orderNumber));
+                    const newlyAddedOrders = freshOrders.filter(o => o?.orderNumber && !oldOrderNumbers.has(o.orderNumber));
+                    
+                    if (newlyAddedOrders.length > 0) {
+                        playNotificationSound();
+                    }
+                    
+                    // Check if any order's status, paymentStatus, or orderNumber has changed
+                    const hasChanged = freshOrders.length !== orders.length || freshOrders.some((newOrder, index) => {
+                        const oldOrder = orders[index];
+                        return !oldOrder || 
+                               newOrder.status !== oldOrder.status || 
+                               newOrder.paymentStatus !== oldOrder.paymentStatus ||
+                               newOrder.orderNumber !== oldOrder.orderNumber;
+                    });
+
+                    if (hasChanged) {
+                        orders.length = 0;
+                        orders.push(...freshOrders);
+                        renderTransactionList(transactionList, orders);
+                        syncClearButtonState(clearButton, orders);
+                    }
+                } catch (pollError) {
+                    console.error("Gagal memperbarui pesanan secara berkala:", pollError);
+                }
+            }, 5000);
+
+            window.addEventListener('beforeunload', () => {
+                window.clearInterval(pollInterval);
+            });
+        };
+
+        const connectAdminWebSocket = () => {
             try {
-                const freshOrders = await AdminStore.api.fetchOrders();
-                
-                // Check if any genuinely new orders have arrived since last load
-                const oldOrderNumbers = new Set(orders.map(o => o.orderNumber));
-                const newlyAddedOrders = freshOrders.filter(o => o?.orderNumber && !oldOrderNumbers.has(o.orderNumber));
-                
-                if (newlyAddedOrders.length > 0) {
-                    playNotificationSound();
-                }
-                
-                // Check if any order's status, paymentStatus, or orderNumber has changed
-                const hasChanged = freshOrders.length !== orders.length || freshOrders.some((newOrder, index) => {
-                    const oldOrder = orders[index];
-                    return !oldOrder || 
-                           newOrder.status !== oldOrder.status || 
-                           newOrder.paymentStatus !== oldOrder.paymentStatus ||
-                           newOrder.orderNumber !== oldOrder.orderNumber;
-                });
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${window.location.host}`;
+                ws = new WebSocket(wsUrl);
 
-                if (hasChanged) {
-                    orders.length = 0;
-                    orders.push(...freshOrders);
-                    renderTransactionList(transactionList, orders);
-                    syncClearButtonState(clearButton, orders);
-                }
-            } catch (pollError) {
-                console.error("Gagal memperbarui pesanan secara berkala:", pollError);
+                ws.onopen = () => {
+                    console.log("WebSocket connected to admin stream.");
+                    ws.send(JSON.stringify({
+                        type: 'register',
+                        role: 'admin'
+                    }));
+                };
+
+                ws.onmessage = async (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'newOrder' || data.type === 'orderUpdated') {
+                            const freshOrders = await AdminStore.api.fetchOrders();
+                            
+                            if (data.type === 'newOrder') {
+                                playNotificationSound();
+                            }
+                            
+                            orders.length = 0;
+                            orders.push(...freshOrders);
+                            renderTransactionList(transactionList, orders);
+                            syncClearButtonState(clearButton, orders);
+                        }
+                    } catch (msgErr) {
+                        console.error("Gagal mengurai pesan WebSocket admin:", msgErr);
+                    }
+                };
+
+                ws.onerror = (err) => {
+                    console.warn("WebSocket admin error:", err);
+                    startPollingFallback();
+                };
+
+                ws.onclose = () => {
+                    startPollingFallback();
+                };
+            } catch (wsErr) {
+                console.warn("Gagal inisialisasi WebSocket admin:", wsErr);
+                startPollingFallback();
             }
-        }, 5000);
+        };
 
-        window.addEventListener('beforeunload', () => {
-            window.clearInterval(pollInterval);
-        });
+        connectAdminWebSocket();
     } catch (error) {
         if (transactionList) {
             transactionList.innerHTML = `

@@ -30,7 +30,9 @@ async function startServer() {
   await testConnection();
   await migrateDatabase();
 
-  app.listen(port, () => {
+  const { initWebSocket } = require("./utils/websocket");
+
+  const server = app.listen(port, () => {
     console.log(`QR Ordering backend listening on port ${port} (${nodeEnv}).`);
     console.log("Database connection OK.");
     console.log(
@@ -40,6 +42,8 @@ async function startServer() {
     );
     console.log(`Upload storage mode: ${uploadStorageMode}`);
   });
+
+  initWebSocket(server);
 }
 
 startServer().catch((error) => {

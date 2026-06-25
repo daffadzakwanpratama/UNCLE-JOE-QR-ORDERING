@@ -10,6 +10,7 @@ const {
   requirePositiveInteger,
   badRequest,
 } = require("../utils/validation");
+const { notifyStatusChange, notifyNewOrder } = require("../utils/websocket");
 
 const router = express.Router();
 
@@ -259,6 +260,9 @@ router.get("/:orderNumber", asyncHandler(async (request, response) => {
           // Perbarui objek lokal order untuk respons ini
           order.paymentStatus = newPaymentStatus;
           console.log(`[Midtrans Fallback Sync] Status order ${order.orderNumber} berhasil disinkronkan ke '${newPaymentStatus}'`);
+          
+          // Kirim sinyal WebSocket agar admin dan halaman pelanggan ter-update real-time
+          notifyStatusChange(order.orderNumber, order.status || "received", newPaymentStatus);
         }
       }
     } catch (fallbackError) {
@@ -334,6 +338,8 @@ router.patch("/:orderNumber/status", requireAdminAuth, asyncHandler(async (reque
     }
   );
 
+  notifyStatusChange(order.orderNumber, nextStatus, order.paymentStatus || "pending");
+
   response.json({
     success: true,
     message: "Status pesanan berhasil diperbarui.",
@@ -362,6 +368,10 @@ router.post("/clear", requireAdminAuth, asyncHandler(async (request, response) =
     orderNumbers
   );
 
+  orderNumbers.forEach((orderNumber) => {
+    notifyStatusChange(orderNumber, "done", "paid");
+  });
+
   response.json({
     success: true,
     message: "Pesanan berhasil dibersihkan dari dashboard.",
@@ -381,7 +391,7 @@ router.patch("/:orderNumber/payment-method", asyncHandler(async (request, respon
   }
 
   const orders = await query(
-    `SELECT id, order_number, payment_status, payment_method FROM orders WHERE order_number = :orderNumber LIMIT 1`,
+    `SELECT id, order_number, payment_status, payment_method, status FROM orders WHERE order_number = :orderNumber LIMIT 1`,
     { orderNumber }
   );
   const order = orders[0];
@@ -408,6 +418,8 @@ router.patch("/:orderNumber/payment-method", asyncHandler(async (request, respon
     }
   );
 
+  notifyStatusChange(orderNumber, order.status || "received", order.paymentStatus || "pending");
+
   response.json({
     success: true,
     message: "Metode pembayaran berhasil diubah menjadi tunai.",
@@ -431,7 +443,7 @@ router.patch("/:orderNumber/payment-status", requireAdminAuth, asyncHandler(asyn
   }
 
   const orders = await query(
-    `SELECT id, order_number FROM orders WHERE order_number = :orderNumber LIMIT 1`,
+    `SELECT id, order_number, status FROM orders WHERE order_number = :orderNumber LIMIT 1`,
     { orderNumber }
   );
   const order = orders[0];
@@ -450,6 +462,8 @@ router.patch("/:orderNumber/payment-status", requireAdminAuth, asyncHandler(asyn
       id: order.id,
     }
   );
+
+  notifyStatusChange(orderNumber, order.status || "received", normalizedPaymentStatus);
 
   response.json({
     success: true,
@@ -833,6 +847,18 @@ router.post("/", asyncHandler(async (request, response) => {
       }
     }
 
+    notifyNewOrder({
+      orderNumber: createdOrder.orderNumber,
+      customerName: normalizedCustomerName,
+      phoneNumber: normalizedPhoneNumber || null,
+      tableNumber: normalizedTableNumber,
+      paymentMethod: normalizedPaymentMethod,
+      paymentStatus: "pending",
+      status: "received",
+      total: computedTotal,
+      createdAt: new Date(),
+    });
+
     response.status(201).json({
       success: true,
       message: "Order berhasil dibuat.",
@@ -918,6 +944,13 @@ router.post("/payment/notification", asyncHandler(async (request, response) => {
       orderId,
     }
   );
+
+  const orders = await query(
+    `SELECT status FROM orders WHERE order_number = :orderId LIMIT 1`,
+    { orderId }
+  );
+  const status = orders[0]?.status || "received";
+  notifyStatusChange(orderId, status, paymentStatus);
 
   response.json({
     success: true,
