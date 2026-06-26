@@ -121,7 +121,7 @@ function createSearchCard(item) {
           ` : ""}
         </div>
         <div class="search-menu-footer">
-          <span class="search-price">${item.priceType === 'hot_ice' ? `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}` : formatRupiah(item.price)}</span>
+          <span class="search-price">${item.priceType === 'hot_ice' ? `Mulai ${formatRupiah(Math.min(item.priceHot, item.priceIce))}` : formatRupiah(item.price)}</span>
           <a class="order-button search-action-button" href="./menu.html?id=${itemId}">Pesan</a>
         </div>
       </div>

@@ -172,7 +172,7 @@ function createPopularCard(item) {
         <div class="price-row">
           <div class="price-group">
             ${item.oldPrice ? `<span class="price-old">${formatRupiah(item.oldPrice)}</span>` : ""}
-            <span class="price-current">${item.priceType === 'hot_ice' ? `${formatRupiah(item.priceHot)} - ${formatRupiah(item.priceIce)}` : formatRupiah(item.price)}</span>
+            <span class="price-current">${item.priceType === 'hot_ice' ? `Mulai ${formatRupiah(Math.min(item.priceHot, item.priceIce))}` : formatRupiah(item.price)}</span>
           </div>
           <a class="order-button" href="./menu.html?id=${itemId}">Pesan</a>
         </div>
