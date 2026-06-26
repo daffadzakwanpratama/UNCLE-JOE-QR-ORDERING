@@ -2941,6 +2941,20 @@ a {
     padding: 0.8rem 0.9rem;
   }
   /* Utility Classes */
+  .search-menu-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+  .search-action-button {
+    width: 100%;
+    min-width: unset;
+    height: 2.6rem;
+    padding: 0;
+  }
+  .search-price {
+    font-size: 1.05rem;
+  }
   .text-responsive {
     font-size: calc(1rem + 0.5vw);
   }
