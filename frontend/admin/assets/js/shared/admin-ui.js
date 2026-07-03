@@ -683,15 +683,6 @@ function printReceipt(order) {
             maximumFractionDigits: 0
         }).format(val).replace(/\s/g, ''); // strip spacing
     }
-
-    function escapeHtml(value) {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
 }
 
 function showAdminToast(message, isSuccess = true) {
@@ -865,6 +856,15 @@ function initAdminIcons() {
     });
 }
 
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 window.AdminUi = {
     renderAdminTopBar,
     renderAdminSidebar,
@@ -874,6 +874,7 @@ window.AdminUi = {
     initAdminIcons,
     printReceipt,
     initMuteButtons,
+    escapeHtml,
 };
 
 

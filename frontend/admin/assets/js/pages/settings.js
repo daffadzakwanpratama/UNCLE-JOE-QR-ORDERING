@@ -80,9 +80,9 @@ class SettingsPage {
 
                 return `
                     <tr>
-                        <td><strong>${this.escapeHtml(user.username)}</strong>${isSelf ? ' <small style="color:var(--text-muted);">(Anda)</small>' : ''}</td>
-                        <td>${this.escapeHtml(user.fullName)}</td>
-                        <td><span class="admin-badge is-badge-${user.role === 'admin' ? 'violet' : 'gray'}">${this.escapeHtml(roleLabel)}</span></td>
+                        <td><strong>${escapeHtml(user.username)}</strong>${isSelf ? ' <small style="color:var(--text-muted);">(Anda)</small>' : ''}</td>
+                        <td>${escapeHtml(user.fullName)}</td>
+                        <td><span class="admin-badge is-badge-${user.role === 'admin' ? 'violet' : 'gray'}">${escapeHtml(roleLabel)}</span></td>
                         <td>
                             <div style="display: flex; gap: 8px;">
                                 <button type="button" class="admin-secondary-button size-small" data-action="password" data-id="${user.id}">Sandi</button>
@@ -279,14 +279,7 @@ class SettingsPage {
         }
     }
 
-    escapeHtml(value = '') {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {

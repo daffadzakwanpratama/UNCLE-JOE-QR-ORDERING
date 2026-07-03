@@ -152,10 +152,10 @@ class BannerPage {
 
             return `
                 <tr>
-                    <td><img class="admin-table-thumb" src="${banner.imageUrl || AdminStore.getMenuPlaceholder('BN')}" alt="${this.escapeHtml(banner.title)}"></td>
-                    <td class="admin-table-title">${this.escapeHtml(banner.title)}</td>
-                    <td>${this.escapeHtml(banner.subtitle || '-')}</td>
-                    <td>${this.escapeHtml(this.formatPeriod(banner.startDate, banner.endDate))}</td>
+                    <td><img class="admin-table-thumb" src="${banner.imageUrl || AdminStore.getMenuPlaceholder('BN')}" alt="${escapeHtml(banner.title)}"></td>
+                    <td class="admin-table-title">${escapeHtml(banner.title)}</td>
+                    <td>${escapeHtml(banner.subtitle || '-')}</td>
+                    <td>${escapeHtml(this.formatPeriod(banner.startDate, banner.endDate))}</td>
                     <td><span class="admin-status-badge ${statusClass}">${statusLabel}</span></td>
                     <td>
                         <div class="admin-action-group">
@@ -295,14 +295,6 @@ class BannerPage {
         return `${startFormatted} s/d ${endFormatted}`;
     }
 
-    escapeHtml(value) {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

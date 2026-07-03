@@ -172,11 +172,11 @@ class DiscountPage {
 
             return `
                 <tr>
-                    <td class="admin-table-title">${this.escapeHtml(discount.code)}</td>
-                    <td>${this.escapeHtml(discount.name)}</td>
-                    <td>${this.escapeHtml(discount.type)}</td>
-                    <td>${this.escapeHtml(this.formatDiscountValue(discount))}</td>
-                    <td>${this.escapeHtml(this.formatPeriod(discount.startDate, discount.endDate))}</td>
+                    <td class="admin-table-title">${escapeHtml(discount.code)}</td>
+                    <td>${escapeHtml(discount.name)}</td>
+                    <td>${escapeHtml(discount.type)}</td>
+                    <td>${escapeHtml(this.formatDiscountValue(discount))}</td>
+                    <td>${escapeHtml(this.formatPeriod(discount.startDate, discount.endDate))}</td>
                     <td>${Number(discount.usedCount || 0)} / ${Number(discount.usageLimit || 0)}</td>
                     <td><span class="admin-status-badge ${statusClass}">${statusLabel}</span></td>
                     <td>
@@ -319,14 +319,6 @@ class DiscountPage {
         return `${startFormatted} s/d ${endFormatted}`;
     }
 
-    escapeHtml(value) {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

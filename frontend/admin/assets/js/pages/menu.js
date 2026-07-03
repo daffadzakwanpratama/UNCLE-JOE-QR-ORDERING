@@ -121,7 +121,7 @@ class MenuPage {
     renderCategoryOptions() {
         const options = ['<option value="all">Semua kategori</option>']
             .concat(this.categories.map((category) => (
-                `<option value="${category.id}">${this.escapeHtml(category.name)}</option>`
+                `<option value="${category.id}">${escapeHtml(category.name)}</option>`
             )));
 
         if (this.categoryFilter) {
@@ -132,7 +132,7 @@ class MenuPage {
 
         if (this.menuCategoryInput) {
             this.menuCategoryInput.innerHTML = this.categories.map((category) => (
-                `<option value="${category.id}">${this.escapeHtml(category.name)}</option>`
+                `<option value="${category.id}">${escapeHtml(category.name)}</option>`
             )).join('');
         }
     }
@@ -176,9 +176,9 @@ class MenuPage {
 
             return `
                 <tr>
-                    <td><img class="admin-table-thumb" src="${this.getMenuImage(menu)}" alt="${this.escapeHtml(menu.name)}"></td>
-                    <td class="admin-table-title">${this.escapeHtml(menu.name)}</td>
-                    <td>${this.escapeHtml(categoryName)}</td>
+                    <td><img class="admin-table-thumb" src="${this.getMenuImage(menu)}" alt="${escapeHtml(menu.name)}"></td>
+                    <td class="admin-table-title">${escapeHtml(menu.name)}</td>
+                    <td>${escapeHtml(categoryName)}</td>
                     <td>${priceDisplay}</td>
                     <td><span class="admin-status-badge ${availabilityClass}">${availabilityLabel}</span></td>
                     <td>
@@ -422,14 +422,6 @@ class MenuPage {
         return menu.imageUrl || menu.image || AdminStore.getMenuPlaceholder(menu.name);
     }
 
-    escapeHtml(value) {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -99,8 +99,8 @@ class CategoryPage {
 
             return `
                 <tr>
-                    <td class="admin-table-title">${this.escapeHtml(category.name)}</td>
-                    <td>${this.escapeHtml(category.description || '-')}</td>
+                    <td class="admin-table-title">${escapeHtml(category.name)}</td>
+                    <td>${escapeHtml(category.description || '-')}</td>
                     <td>${menuCount} menu</td>
                     <td>
                         <div class="admin-action-group">
@@ -191,14 +191,7 @@ class CategoryPage {
         this.render();
     }
 
-    escapeHtml(value) {
-        return String(value)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#39;');
-    }
+
 }
 
 document.addEventListener('DOMContentLoaded', () => {
