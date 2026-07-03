@@ -30,8 +30,25 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto !important;
   -webkit-tap-highlight-color: transparent; /* Remove gray overlay on iOS tap */
+}
+
+/* Lenis scroll compatibility */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  scroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
 body {

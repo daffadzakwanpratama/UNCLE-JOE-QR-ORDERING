@@ -445,11 +445,9 @@ window.loadStorefrontSettings = loadStorefrontSettings;
 
 syncActiveTableFromLocation();
 
-// Initialize Lenis smooth scroll if loaded
 if (typeof window.Lenis !== "undefined") {
   const lenis = new window.Lenis({
-    duration: 1.2,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    lerp: 0.09, // Kecepatan damping interpolasi linear (sangat halus)
     smoothWheel: true,
     smoothTouch: false,
   });
