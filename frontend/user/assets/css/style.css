@@ -2967,7 +2967,9 @@ a {
   }
   .card-badge {
     font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
+    padding: 0.22rem 0.55rem;
+    min-height: auto !important;
+    font-weight: 600;
   }
   /* Detail Page Images */
   .detail-media img {

@@ -96,7 +96,8 @@ function createSearchCard(item) {
   const itemId = encodeURIComponent(item.id);
   const itemImage = escapeAttribute(item.image);
   const itemName = escapeHTML(item.name);
-  const itemBadge = escapeHTML(item.badge);
+  const displayBadge = item.badge === "Habis" ? "Habis" : item.category;
+  const escapedBadge = escapeHTML(displayBadge);
   const itemPromo = escapeHTML(item.promo);
   const showRating = shouldShowProductRating(item);
 
@@ -105,7 +106,7 @@ function createSearchCard(item) {
       <div class="search-menu-media">
         <img src="${itemImage}" alt="${itemName}" loading="lazy">
         <div class="card-badge-row search-badge-row">
-          ${itemBadge ? `<span class="card-badge">${itemBadge}</span>` : "<span></span>"}
+          ${escapedBadge ? `<span class="card-badge">${escapedBadge}</span>` : "<span></span>"}
           ${itemPromo ? `<span class="card-badge">${itemPromo}</span>` : ""}
         </div>
       </div>
