@@ -2402,7 +2402,7 @@ a {
   }
 
   .popular-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .recommendation-thumb {
@@ -2903,7 +2903,7 @@ a {
   }
   /* Product Grid */
   .popular-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .popular-card, .recommendation-card {
     padding: 0.8rem;
