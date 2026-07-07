@@ -1,6 +1,6 @@
 # QR Ordering
 
-Web-based QR ordering system for restaurant customers and admin management. Project ini memakai Node.js, Express, MySQL, serta frontend terpisah untuk pelanggan dan admin, tetapi tetap disajikan dari backend yang sama.
+Web-based QR ordering system for restaurant customers and admin management. Project ini memakai Node.js, Express, PostgreSQL (termasuk kompatibilitas dengan Supabase), serta frontend terpisah untuk pelanggan dan admin, tetapi tetap disajikan dari backend yang sama.
 
 ## Fitur Utama
 
@@ -28,8 +28,8 @@ backend/
     routes/
     utils/
 database/
-  schema.sql
-  seeds.sql
+  schema_postgres.sql
+  seeds_postgres.sql
 public/
   uploads/     # upload lokal
 ```
@@ -44,8 +44,8 @@ npm install
 
 2. Buat file `.env` berdasarkan `.env.example`.
 3. Sesuaikan konfigurasi database pada `.env`.
-4. Import `database/schema.sql`.
-5. Import `database/seeds.sql`.
+4. Import `database/schema_postgres.sql`.
+5. Import `database/seeds_postgres.sql`.
 6. Jalankan server development.
 
 ```bash
