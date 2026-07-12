@@ -272,7 +272,7 @@ class DiscountPage {
     }
 
     async deleteDiscount(discountId) {
-        const confirmed = window.confirm('Hapus kode promo ini?');
+        const confirmed = await showAdminConfirm('Hapus Promo', 'Apakah Anda yakin ingin menghapus kode promo ini?');
         if (!confirmed) return;
 
         await AdminStore.api.deleteDiscount(discountId);

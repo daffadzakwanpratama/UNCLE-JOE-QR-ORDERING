@@ -239,7 +239,7 @@ class BannerPage {
     }
 
     async deleteBanner(bannerId) {
-        const confirmed = window.confirm('Hapus banner ini?');
+        const confirmed = await showAdminConfirm('Hapus Banner', 'Apakah Anda yakin ingin menghapus banner ini?');
         if (!confirmed) return;
 
         await AdminStore.api.deleteBanner(bannerId);

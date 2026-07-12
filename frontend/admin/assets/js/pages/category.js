@@ -179,11 +179,11 @@ class CategoryPage {
     async deleteCategory(categoryId) {
         const usedByMenu = this.menus.some((menu) => menu.categoryId === categoryId);
         if (usedByMenu) {
-            window.alert('Kategori ini masih dipakai oleh menu. Hapus atau pindahkan menunya dulu.');
+            await showAdminAlert('Kategori Dipakai', 'Kategori ini masih dipakai oleh menu. Hapus atau pindahkan menunya dulu.');
             return;
         }
 
-        const confirmed = window.confirm('Hapus kategori ini?');
+        const confirmed = await showAdminConfirm('Hapus Kategori', 'Apakah Anda yakin ingin menghapus kategori ini?');
         if (!confirmed) return;
 
         await AdminStore.api.deleteCategory(categoryId);

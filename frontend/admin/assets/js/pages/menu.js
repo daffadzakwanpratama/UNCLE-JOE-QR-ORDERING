@@ -199,14 +199,14 @@ class MenuPage {
         }).join('');
     }
 
-    openModal(menuId = null) {
+    async openModal(menuId = null) {
         this.form?.reset();
         this.formError.textContent = '';
         this.menuIdInput.value = '';
         this.currentImageData = '';
 
         if (!this.categories.length) {
-            window.alert('Tambahkan kategori dulu sebelum membuat menu.');
+            await showAdminAlert('Kategori Kosong', 'Tambahkan kategori dulu sebelum membuat menu.');
             return;
         }
 
@@ -365,13 +365,13 @@ class MenuPage {
             await this.loadData();
             this.render();
         } catch (error) {
-            window.alert(error.message || 'Gagal mengubah status popularitas menu.');
+            await showAdminAlert('Gagal', error.message || 'Gagal mengubah status popularitas menu.');
             this.render();
         }
     }
 
     async deleteMenu(menuId) {
-        const confirmed = window.confirm('Hapus menu ini?');
+        const confirmed = await showAdminConfirm('Hapus Menu', 'Apakah Anda yakin ingin menghapus menu ini?');
         if (!confirmed) return;
 
         await AdminStore.api.deleteMenu(menuId);

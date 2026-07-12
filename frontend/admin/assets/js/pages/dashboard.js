@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (error) {
                 actionButton.disabled = false;
                 actionButton.textContent = originalLabel;
-                window.alert(error.message || 'Gagal memperbarui status pesanan.');
+                await showAdminAlert('Gagal Memperbarui', error.message || 'Gagal memperbarui status pesanan.');
             }
         });
 
