@@ -72,17 +72,22 @@ function createStatusCostRows(totals) {
 }
 
 function getStatusAnimationContent(order) {
-  const currentStep = order.currentStep === "pickup"
-    ? "Pesanan siap diambil"
-    : order.currentStep === "done"
-      ? "Pesanan selesai"
-      : "Kopi sedang dibuat";
+  let currentStep = "Pesanan sedang dibuat";
+  let subtitle = "Barista menyiapkan pesananmu...";
 
-  const subtitle = order.currentStep === "pickup"
-    ? "Pesananmu sudah hampir selesai. Silakan bersiap mengambilnya."
-    : order.currentStep === "done"
-      ? "Pesananmu sudah selesai diproses."
-      : "Barista menyiapkan pesananmu...";
+  if (order.currentStep === "received") {
+    currentStep = "Pesanan sudah dilihat";
+    subtitle = "Pesananmu sudah dilihat dan dikonfirmasi oleh admin.";
+  } else if (order.currentStep === "brewing") {
+    currentStep = "Pesanan sedang dibuat";
+    subtitle = "Barista sedang menyiapkan pesananmu...";
+  } else if (order.currentStep === "pickup") {
+    currentStep = "Pesanan siap diantar";
+    subtitle = "Pesananmu sudah selesai dibuat dan akan segera diantar ke mejamu.";
+  } else if (order.currentStep === "done") {
+    currentStep = "Pesanan selesai";
+    subtitle = "Pesananmu sudah selesai diproses.";
+  }
 
   return `
     <div class="status-brew-card">

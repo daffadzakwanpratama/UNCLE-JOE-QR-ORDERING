@@ -212,9 +212,9 @@ function bindCheckoutActions(items, totals) {
       estimate: "10 menit",
       currentStep: "brewing",
       steps: [
-        { key: "received", label: "Pesanan Diterima", icon: "&#10003;" },
-        { key: "brewing", label: "Sedang Diproses", icon: "&#9749;" },
-        { key: "pickup", label: "Siap Diambil", icon: "&#9633;" },
+        { key: "received", label: "Pesanan Dilihat", icon: "&#10003;" },
+        { key: "brewing", label: "Sedang Dibuat", icon: "&#9749;" },
+        { key: "pickup", label: "Siap Diantar", icon: "&#9633;" },
         { key: "done", label: "Selesai", icon: "&#10003;" },
       ],
       items: items.map((item) => ({

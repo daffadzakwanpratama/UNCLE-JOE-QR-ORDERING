@@ -320,7 +320,7 @@ async function openDetailModal(elements, transaction) {
     if (elements.detailSubtitle) {
         const detailDate = detail.date || detail.createdAt?.slice(0, 10);
         const detailTime = detail.time || detail.createdAt?.slice(11, 16);
-        elements.detailSubtitle.textContent = `${formatDateTime(detailDate, detailTime)} | ${detail.status || '-'}`;
+        elements.detailSubtitle.textContent = `${formatDateTime(detailDate, detailTime)} | ${getStatusLabel(detail.status)}`;
     }
 
     if (elements.detailGrid) {
@@ -328,7 +328,7 @@ async function openDetailModal(elements, transaction) {
             ['Pelanggan', detail.customer || detail.customerName],
             ['Meja / Tipe', detail.table || detail.tableName || detail.tableNumber],
             ['Pembayaran', detail.payment || detail.paymentMethod],
-            ['Status', detail.status],
+            ['Status', getStatusLabel(detail.status)],
             ['Total', AdminStore.formatAdminCurrency(Number(detail.total || 0))],
             ['Kode Transaksi', detail.code || detail.orderNumber],
         ].map(([label, value]) => {
@@ -501,6 +501,21 @@ function collectTransactionNotes(transaction, { includeItemNames = false } = {})
     ]
         .map((value) => String(value || '').trim())
         .filter(Boolean);
+}
+
+function getStatusLabel(status) {
+    switch (String(status || '').toLowerCase()) {
+        case 'received':
+            return 'Dilihat';
+        case 'preparing':
+            return 'Sedang Dibuat';
+        case 'ready':
+            return 'Siap Diantar';
+        case 'done':
+            return 'Selesai';
+        default:
+            return status || '-';
+    }
 }
 
 

@@ -372,7 +372,7 @@ function renderTransactionList(container, orders) {
             <article class="admin-transaction-card${isNewClass}" data-order-card="${transaction.orderNumber}">
                 <div class="admin-transaction-top">
                     <strong>${escapeHtml(transaction.orderNumber)}</strong>
-                    <span class="admin-transaction-badge ${getTransactionBadgeClass(transaction.status)}">${escapeHtml(transaction.status || 'received')}</span>
+                    <span class="admin-transaction-badge ${getTransactionBadgeClass(transaction.status)}">${escapeHtml(getTransactionStatusLabel(transaction.status))}</span>
                 </div>
                 <div class="admin-transaction-meta">
                     <span>Time</span>
@@ -447,6 +447,21 @@ function syncClearButtonState(button, orders) {
     button.disabled = !getVisibleDashboardOrders(orders).length;
 }
 
+
+function getTransactionStatusLabel(status) {
+    switch (String(status || '').toLowerCase()) {
+        case 'received':
+            return 'Dilihat';
+        case 'preparing':
+            return 'Sedang Dibuat';
+        case 'ready':
+            return 'Siap Diantar';
+        case 'done':
+            return 'Selesai';
+        default:
+            return status || 'Dilihat';
+    }
+}
 
 function getTransactionBadgeClass(status) {
     switch (String(status || '').toLowerCase()) {
@@ -565,7 +580,7 @@ function renderTransactionActions(transaction) {
     if (status === 'received') {
         statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Proses</button>`;
     } else if (status === 'preparing') {
-        statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Siap Diambil</button>`;
+        statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Siap Diantar</button>`;
     } else if (status === 'ready') {
         statusButton = `<button type="button" class="admin-transaction-action is-accept" data-order-action="advance" data-order-number="${orderNumber}">Selesai</button>`;
     }
