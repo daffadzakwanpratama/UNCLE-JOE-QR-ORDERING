@@ -1,5 +1,6 @@
 const { query, testConnection } = require("../config/db");
-const { formatDateOnly } = require("../utils/date");
+const { findDiscountByCode, checkDiscountValidity } = require("../utils/discount");
+const midtransService = require("../utils/midtrans");
 
 async function index(request, response) {
   response.json({
@@ -117,29 +118,7 @@ async function validateDiscount(request, response) {
     });
   }
 
-  const discounts = await query(
-    `SELECT
-        id,
-        code,
-        name,
-        type,
-        discount_type AS discountType,
-        discount_value AS discountValue,
-        min_purchase AS minPurchase,
-        max_discount AS maxDiscount,
-        usage_limit AS usageLimit,
-        used_count AS usedCount,
-        start_date AS startDate,
-        end_date AS endDate,
-        is_active AS isActive,
-        description
-     FROM discounts
-     WHERE code = :code
-     LIMIT 1`,
-    { code }
-  );
-
-  const discount = discounts[0];
+  const discount = await findDiscountByCode(code);
 
   if (!discount) {
     return response.status(404).json({
@@ -148,29 +127,24 @@ async function validateDiscount(request, response) {
     });
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const startDate = formatDateOnly(discount.startDate);
-  const endDate = formatDateOnly(discount.endDate);
-  const isExpired = endDate && endDate < today;
-  const hasStarted = !startDate || startDate <= today;
-  const isActive = Boolean(Number(discount.isActive) || discount.isActive);
-  const hasQuota = !Number(discount.usageLimit || 0) || Number(discount.usedCount || 0) < Number(discount.usageLimit || 0);
+  const validity = checkDiscountValidity(discount);
 
   response.json({
     success: true,
     data: {
       ...discount,
-      isValid: Boolean(isActive && !isExpired && hasStarted && hasQuota),
+      isValid: validity.isValid,
     },
   });
 }
 
 function getMidtransConfig(request, response) {
+  const config = midtransService.getMidtransConfig();
   response.json({
     success: true,
     data: {
-      clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
-      isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
+      clientKey: config.clientKey,
+      isProduction: config.isProduction,
     },
   });
 }

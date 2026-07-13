@@ -1,6 +1,4 @@
-const crypto = require("crypto");
 const { getPool, query } = require("../config/db");
-const { formatDateOnly, getTodayDateLabel } = require("../utils/date");
 const {
   requireNonEmptyString,
   optionalTrimmedString,
@@ -10,6 +8,8 @@ const {
   badRequest,
 } = require("../utils/validation");
 const { notifyStatusChange, notifyNewOrder } = require("../utils/websocket");
+const { findDiscountByCode, checkDiscountValidity } = require("../utils/discount");
+const midtransService = require("../utils/midtrans");
 
 const DEFAULT_SERVICE_FEE = 2000;
 const ORDER_STATUS_FLOW = {
@@ -211,56 +211,29 @@ async function getOrderDetails(request, response) {
   // FALLBACK SYNC: Jika pembayaran QRIS masih pending di DB kita, cek status langsung ke Midtrans API
   if (String(order.paymentMethod).toLowerCase() === "qris" && String(order.paymentStatus).toLowerCase() === "pending") {
     try {
-      const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
-      const MIDTRANS_IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
-      const statusUrl = MIDTRANS_IS_PRODUCTION
-        ? `https://api.midtrans.com/v2/${order.orderNumber}/status`
-        : `https://api.sandbox.midtrans.com/v2/${order.orderNumber}/status`;
+      const statusData = await midtransService.getTransactionStatus(order.orderNumber);
+      const newPaymentStatus = midtransService.mapTransactionStatusToPaymentStatus(
+        statusData.transaction_status,
+        statusData.fraud_status
+      );
 
-      const midtransRes = await fetch(statusUrl, {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          Authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
-        },
-      });
-
-      if (midtransRes.ok) {
-        const statusData = await midtransRes.json();
-        const transactionStatus = statusData.transaction_status;
-        const fraudStatus = statusData.fraud_status;
-
-        let newPaymentStatus = "pending";
-
-        if (transactionStatus === "capture") {
-          if (fraudStatus === "accept") {
-            newPaymentStatus = "paid";
+      if (newPaymentStatus !== order.paymentStatus) {
+        // Update database
+        await query(
+          `UPDATE orders
+           SET payment_status = :newPaymentStatus
+           WHERE id = :id`,
+          {
+            newPaymentStatus,
+            id: order.id,
           }
-        } else if (transactionStatus === "settlement") {
-          newPaymentStatus = "paid";
-        } else if (["cancel", "deny", "expire"].includes(transactionStatus)) {
-          newPaymentStatus = "failed";
-        }
-
-        if (newPaymentStatus !== order.paymentStatus) {
-          // Update database
-          await query(
-            `UPDATE orders
-             SET payment_status = :newPaymentStatus
-             WHERE id = :id`,
-            {
-              newPaymentStatus,
-              id: order.id,
-            }
-          );
-          // Perbarui objek lokal order untuk respons ini
-          order.paymentStatus = newPaymentStatus;
-          console.log(`[Midtrans Fallback Sync] Status order ${order.orderNumber} berhasil disinkronkan ke '${newPaymentStatus}'`);
-          
-          // Kirim sinyal WebSocket agar admin dan halaman pelanggan ter-update real-time
-          notifyStatusChange(order.orderNumber, order.status || "received", newPaymentStatus);
-        }
+        );
+        // Perbarui objek lokal order untuk respons ini
+        order.paymentStatus = newPaymentStatus;
+        console.log(`[Midtrans Fallback Sync] Status order ${order.orderNumber} berhasil disinkronkan ke '${newPaymentStatus}'`);
+        
+        // Kirim sinyal WebSocket agar admin dan halaman pelanggan ter-update real-time
+        notifyStatusChange(order.orderNumber, order.status || "received", newPaymentStatus);
       }
     } catch (fallbackError) {
       console.error("[Midtrans Fallback Sync] Gagal menyinkronkan status order:", fallbackError.message || fallbackError);
@@ -591,60 +564,26 @@ async function createOrder(request, response) {
   let discountRow = null;
 
   if (promoCode.trim()) {
-    const normalizedPromoCode = requireNonEmptyString(promoCode, "Kode promo tidak valid.", { maxLength: 50 }).toUpperCase();
-    const discounts = await query(
-      `SELECT
-          id,
-          code,
-          discount_type AS discountType,
-          discount_value AS discountValue,
-          min_purchase AS minPurchase,
-          max_discount AS maxDiscount,
-          usage_limit AS usageLimit,
-          used_count AS usedCount,
-          start_date AS startDate,
-          end_date AS endDate,
-          is_active AS isActive
-       FROM discounts
-       WHERE code = :code
-       LIMIT 1`,
-      { code: normalizedPromoCode }
-    );
+    const discount = await findDiscountByCode(promoCode);
 
-    discountRow = discounts[0] || null;
-
-    if (!discountRow) {
+    if (!discount) {
       return response.status(400).json({
         success: false,
         message: "Kode promo tidak ditemukan.",
       });
     }
 
-    const today = getTodayDateLabel();
-    const startDate = formatDateOnly(discountRow.startDate);
-    const endDate = formatDateOnly(discountRow.endDate);
-    const hasStarted = !startDate || startDate <= today;
-    const hasNotEnded = !endDate || endDate >= today;
-    const isActive = Boolean(Number(discountRow.isActive) || discountRow.isActive);
-    const hasQuota = !Number(discountRow.usageLimit || 0)
-      || Number(discountRow.usedCount || 0) < Number(discountRow.usageLimit || 0);
+    const validity = checkDiscountValidity(discount, computedSubtotal);
 
-    if (!isActive || !hasStarted || !hasNotEnded || !hasQuota) {
+    if (!validity.isValid) {
       return response.status(400).json({
         success: false,
-        message: "Kode promo sudah tidak valid.",
+        message: validity.message,
       });
     }
 
+    discountRow = discount;
     computedDiscountAmount = calculateDiscountAmount(discountRow, computedSubtotal);
-
-    if (!computedDiscountAmount) {
-      return response.status(400).json({
-        success: false,
-        message: "Kode promo belum memenuhi syarat penggunaan.",
-      });
-    }
-
     appliedPromoCode = String(discountRow.code || "").trim().toUpperCase();
   }
 
@@ -764,66 +703,43 @@ async function createOrder(request, response) {
     // Call Midtrans Snap if payment method is cashless
     if (normalizedPaymentMethod === "qris") {
       try {
-        const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY || "";
-        const MIDTRANS_IS_PRODUCTION = process.env.MIDTRANS_IS_PRODUCTION === "true";
-        const MIDTRANS_SNAP_URL = MIDTRANS_IS_PRODUCTION
-          ? "https://app.midtrans.com/snap/v1/transactions"
-          : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+        const itemsPayload = computedItems.map((item) => ({
+          id: String(item.menuId),
+          price: item.unitPrice,
+          quantity: item.qty,
+          name: item.menuName.slice(0, 50),
+        })).concat(
+          computedServiceFee > 0 ? [{
+            id: "SERVICE_FEE",
+            price: computedServiceFee,
+            quantity: 1,
+            name: "Biaya Layanan",
+          }] : []
+        ).concat(
+          computedTaxAmount > 0 ? [{
+            id: "TAX",
+            price: computedTaxAmount,
+            quantity: 1,
+            name: `Pajak (${orderSettings.taxPercent}%)`,
+          }] : []
+        ).concat(
+          computedDiscountAmount > 0 ? [{
+            id: "PROMO_DISCOUNT",
+            price: -computedDiscountAmount,
+            quantity: 1,
+            name: `Promo (${appliedPromoCode})`,
+          }] : []
+        );
 
-        const midtransPayload = {
-          transaction_details: {
-            order_id: createdOrder.orderNumber,
-            gross_amount: computedTotal,
-          },
-          credit_card: {
-            secure: true,
-          },
-          customer_details: {
-            first_name: normalizedCustomerName,
-            phone: normalizedPhoneNumber || "",
-          },
-          item_details: computedItems.map((item) => ({
-            id: String(item.menuId),
-            price: item.unitPrice,
-            quantity: item.qty,
-            name: item.menuName.slice(0, 50),
-          })).concat(
-            computedServiceFee > 0 ? [{
-              id: "SERVICE_FEE",
-              price: computedServiceFee,
-              quantity: 1,
-              name: "Biaya Layanan",
-            }] : []
-          ).concat(
-            computedTaxAmount > 0 ? [{
-              id: "TAX",
-              price: computedTaxAmount,
-              quantity: 1,
-              name: `Pajak (${orderSettings.taxPercent}%)`,
-            }] : []
-          ).concat(
-            computedDiscountAmount > 0 ? [{
-              id: "PROMO_DISCOUNT",
-              price: -computedDiscountAmount,
-              quantity: 1,
-              name: `Promo (${appliedPromoCode})`,
-            }] : []
-          ),
-        };
+        const midtransData = await midtransService.createSnapTransaction(
+          createdOrder.orderNumber,
+          computedTotal,
+          normalizedCustomerName,
+          normalizedPhoneNumber,
+          itemsPayload
+        );
 
-        const midtransRes = await fetch(MIDTRANS_SNAP_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Basic ${Buffer.from(MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
-          },
-          body: JSON.stringify(midtransPayload),
-        });
-
-        const midtransData = await midtransRes.json();
-
-        if (midtransRes.ok && midtransData.token) {
+        if (midtransData.token) {
           paymentToken = midtransData.token;
           paymentUrl = midtransData.redirect_url;
 
@@ -837,8 +753,6 @@ async function createOrder(request, response) {
               id: createdOrder.id,
             }
           );
-        } else {
-          console.error("Midtrans API Error Details:", JSON.stringify(midtransData));
         }
       } catch (midError) {
         console.error("Gagal menghubungi Midtrans:", midError.message || midError);
@@ -900,11 +814,14 @@ async function handleMidtransCallback(request, response) {
   }
 
   // 1. Verifikasi tanda tangan keamanan dari Midtrans
-  const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
-  const stringToHash = `${orderId}${statusCode}${grossAmount}${serverKey}`;
-  const computedSignature = crypto.createHash("sha512").update(stringToHash).digest("hex");
+  const isSignatureValid = midtransService.verifySignatureKey(
+    orderId,
+    statusCode,
+    grossAmount,
+    signatureKey
+  );
 
-  if (computedSignature !== signatureKey) {
+  if (!isSignatureValid) {
     console.error(`[Midtrans Webhook] Tanda tangan tidak valid untuk order ${orderId}`);
     return response.status(403).json({
       success: false,
@@ -915,21 +832,10 @@ async function handleMidtransCallback(request, response) {
   console.log(`[Midtrans Webhook] Notifikasi diterima untuk order ${orderId}, status: ${transactionStatus}`);
 
   // 2. Petakan transaction_status ke payment_status aplikasi kita
-  let paymentStatus = "pending";
-  
-  if (transactionStatus === "capture") {
-    if (fraudStatus === "challenge") {
-      paymentStatus = "pending";
-    } else if (fraudStatus === "accept") {
-      paymentStatus = "paid";
-    }
-  } else if (transactionStatus === "settlement") {
-    paymentStatus = "paid";
-  } else if (["cancel", "deny", "expire"].includes(transactionStatus)) {
-    paymentStatus = "failed";
-  } else if (transactionStatus === "pending") {
-    paymentStatus = "pending";
-  }
+  const paymentStatus = midtransService.mapTransactionStatusToPaymentStatus(
+    transactionStatus,
+    fraudStatus
+  );
 
   // 3. Update status pembayaran di database
   await query(

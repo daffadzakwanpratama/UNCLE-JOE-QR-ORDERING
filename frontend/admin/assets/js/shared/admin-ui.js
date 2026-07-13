@@ -238,26 +238,18 @@ function renderAdminTopBar(currentPage = '') {
                 <line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
         </button>
-        <a class="admin-topbar-brand" href="./dashboard.html" aria-label="QR Ordering Admin Panel">
+        <a class="admin-topbar-brand" href="./dashboard.html" aria-label="Uncle Joe Admin Panel">
             <span class="admin-topbar-logo" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
-                    <rect x="14" y="14" width="3" height="3" rx="0.5" fill="currentColor"/>
-                    <rect x="18" y="14" width="3" height="3" rx="0.5" fill="currentColor"/>
-                    <rect x="14" y="18" width="3" height="3" rx="0.5" fill="currentColor"/>
-                    <rect x="18" y="18" width="3" height="3" rx="0.5" fill="currentColor"/>
-                </svg>
+                <img src="../../user/assets/img/logo.png" alt="Uncle Joe Logo" class="admin-topbar-logo-img">
             </span>
             <span class="admin-topbar-brand-text">
-                <strong>QR Ordering</strong>
+                <strong>Uncle Joe</strong>
                 <small>Admin Panel</small>
             </span>
         </a>
         <div class="admin-topbar-actions" style="margin-left: auto;">
-            <button type="button" class="admin-icon-button dashboard-mute-button" title="Atur Suara Notifikasi" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast) var(--ease-out); border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.05); color: currentColor; flex-shrink: 0;">
-                <span class="dashboard-mute-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: currentColor;"></span>
+            <button type="button" class="admin-icon-button dashboard-mute-button" title="Atur Suara Notifikasi">
+                <span class="dashboard-mute-icon"></span>
             </button>
         </div>
     `.trim();
@@ -324,13 +316,16 @@ function renderAdminSidebar(currentPage = '') {
     sidebar.innerHTML = `
         <div class="admin-sidebar-head">
             <a class="admin-branding" href="./dashboard.html">
+                <span class="admin-sidebar-logo-box">
+                    <img src="../../user/assets/img/logo.png" alt="Uncle Joe Logo" class="admin-sidebar-logo-img">
+                </span>
                 <span>
-                    <strong>QR Ordering</strong>
+                    <strong>Uncle Joe</strong>
                     <small>Admin Panel</small>
                 </span>
             </a>
-            <button type="button" class="admin-icon-button dashboard-mute-button" title="Atur Suara Notifikasi" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast) var(--ease-out); border: 1px solid var(--border-strong); background: rgba(255, 255, 255, 0.05); color: currentColor; flex-shrink: 0; margin-left: auto; margin-right: 8px;">
-                <span class="dashboard-mute-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; color: currentColor;"></span>
+            <button type="button" class="admin-icon-button dashboard-mute-button is-sidebar-mute" title="Atur Suara Notifikasi">
+                <span class="dashboard-mute-icon"></span>
             </button>
             <button class="admin-sidebar-close" id="adminSidebarClose" aria-label="Tutup Menu" title="Tutup Menu">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -790,13 +785,13 @@ function initMuteButtons() {
 
         muteButtons.forEach((muteButton) => {
             if (isMuted) {
-                muteButton.style.background = 'rgba(248, 113, 113, 0.06)';
+                muteButton.style.background = 'rgba(239, 68, 68, 0.08)';
                 muteButton.style.color = 'var(--accent-red)';
-                muteButton.style.borderColor = 'rgba(248, 113, 113, 0.22)';
+                muteButton.style.borderColor = 'rgba(239, 68, 68, 0.2)';
             } else {
-                muteButton.style.background = 'rgba(52, 211, 153, 0.06)';
+                muteButton.style.background = 'rgba(16, 185, 129, 0.08)';
                 muteButton.style.color = 'var(--accent-green)';
-                muteButton.style.borderColor = 'rgba(52, 211, 153, 0.22)';
+                muteButton.style.borderColor = 'rgba(16, 185, 129, 0.2)';
             }
         });
     }
@@ -827,13 +822,13 @@ function initMuteButtons() {
 
             allMuteButtons.forEach((btn) => {
                 if (isMuted) {
-                    btn.style.background = 'rgba(248, 113, 113, 0.06)';
+                    btn.style.background = 'rgba(239, 68, 68, 0.08)';
                     btn.style.color = 'var(--accent-red)';
-                    btn.style.borderColor = 'rgba(248, 113, 113, 0.22)';
+                    btn.style.borderColor = 'rgba(239, 68, 68, 0.2)';
                 } else {
-                    btn.style.background = 'rgba(52, 211, 153, 0.06)';
+                    btn.style.background = 'rgba(16, 185, 129, 0.08)';
                     btn.style.color = 'var(--accent-green)';
-                    btn.style.borderColor = 'rgba(52, 211, 153, 0.22)';
+                    btn.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                 }
             });
 
