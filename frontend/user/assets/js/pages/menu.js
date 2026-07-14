@@ -1,17 +1,30 @@
+/**
+ * HALAMAN PENCARIAN & DETAIL MENU (menu.js) - Klien / Frontend
+ * -------------------------------------------------------------
+ * Tugas utama:
+ * 1. Mengelola pencarian menu kopi/makanan secara real-time.
+ * 2. Mengatur filter menu berdasarkan kategori (Coffee, Non Coffee, dll.).
+ * 3. Mengatur halaman detail menu saat user mengklik menu tertentu.
+ * 4. Menyediakan pilihan varian (Hot / Ice) dan jumlah (quantity) untuk dimasukkan ke keranjang belanja.
+ */
+
+// State untuk halaman pencarian menu
 const searchState = {
-  activeCategory: "Semua",
+  activeCategory: "Semua", // Kategori pencarian yang sedang aktif
 };
 
+// State untuk halaman detail menu (ketika memilih item yang akan dipesan)
 const detailState = {
-  quantity: 1,
-  size: null,
+  quantity: 1,  // Jumlah porsi item (default: 1)
+  size: null,   // Varian ukuran/suhu (Hot / Ice)
 };
 
+// Array global penampung daftar menu dari API
 let currentMenuItems = [];
-function shouldShowProductRating(item) {
-  return false;
-}
 
+/**
+ * Menampilkan pesan popup sukses (Toast) setelah sukses menambahkan ke keranjang belanja.
+ */
 function showDetailToast(message) {
   showToastMessage({
     stackId: "detailToastStack",
@@ -21,10 +34,16 @@ function showDetailToast(message) {
   });
 }
 
+/**
+ * Mengambil kata kunci yang diketik user pada kolom pencarian (input id: menuSearch).
+ */
 function getSearchKeyword() {
   return document.getElementById("menuSearch")?.value.trim().toLowerCase() || "";
 }
 
+/**
+ * Mengumpulkan semua kategori unik dari daftar menu untuk dijadikan tab filter.
+ */
 function getSearchCategories() {
   const categories = Array.from(new Set(
     currentMenuItems
@@ -32,9 +51,12 @@ function getSearchCategories() {
       .filter(Boolean)
   ));
 
-  return ["Semua", ...categories];
+  return ["Semua", ...categories]; // Gabungkan dengan tab "Semua" di awal
 }
 
+/**
+ * Menggambar pil tombol kategori pencarian ke layar (Coffee, Non Coffee, Snack, dll.).
+ */
 function renderSearchCategories() {
   const row = document.getElementById("searchCategoryRow");
   const activeLabel = document.getElementById("activeCategoryLabel");
@@ -45,6 +67,7 @@ function renderSearchCategories() {
 
   const categories = getSearchCategories();
 
+  // Buat element HTML tombol pil untuk masing-masing kategori
   row.innerHTML = categories.map((category) => `
     <button
       type="button"
@@ -55,22 +78,27 @@ function renderSearchCategories() {
     </button>
   `).join("");
 
+  // Perbarui label teks penunjuk kategori aktif di atas daftar menu
   if (activeLabel) {
     activeLabel.textContent = searchState.activeCategory === "Semua"
       ? "Semua menu"
       : searchState.activeCategory;
   }
 
+  // Beri event listener klik pada masing-masing pil kategori
   row.querySelectorAll("[data-search-category]").forEach((button) => {
     button.addEventListener("click", () => {
       const selectedCategory = button.dataset.searchCategory || "Semua";
       searchState.activeCategory = selectedCategory;
-      renderSearchCategories();
-      renderSearchMenu();
+      renderSearchCategories(); // Gambar ulang tombol kategori untuk memperbarui tombol yang aktif
+      renderSearchMenu();       // Saring dan gambar ulang daftar menunya
     });
   });
 }
 
+/**
+ * Menyaring (filter) menu berdasarkan kategori aktif dan kata kunci pencarian.
+ */
 function getFilteredSearchItems() {
   const keyword = getSearchKeyword();
 
@@ -78,20 +106,24 @@ function getFilteredSearchItems() {
     .filter((item) => searchState.activeCategory === "Semua" || item.category === searchState.activeCategory)
     .filter((item) => {
       if (!keyword) {
-        return true;
+        return true; // Jika tidak mengetik apa-apa, lolos saringan
       }
-
+      // Cari kecocokan kata kunci pada Nama Menu atau Deskripsi Menu
       return item.name.toLowerCase().includes(keyword) || item.description.toLowerCase().includes(keyword);
     });
 }
 
+/**
+ * Mengatur pengurutan daftar menu. 
+ * Saat ini data diurutkan secara bawaan/alfabetis dari database.
+ */
 function sortSearchItems(items) {
-  const sorted = [...items];
-
-  sorted.sort((left, right) => right.popularity - left.popularity);
-  return sorted;
+  return items;
 }
 
+/**
+ * Membuat kartu HTML (Card) menu untuk baris hasil pencarian.
+ */
 function createSearchCard(item) {
   const itemId = encodeURIComponent(item.id);
   const itemImage = escapeAttribute(item.image);
@@ -99,7 +131,6 @@ function createSearchCard(item) {
   const displayBadge = item.badge === "Habis" ? "Habis" : item.category;
   const escapedBadge = escapeHTML(displayBadge);
   const itemPromo = escapeHTML(item.promo);
-  const showRating = shouldShowProductRating(item);
 
   return `
     <article class="search-menu-card">
@@ -113,13 +144,6 @@ function createSearchCard(item) {
       <div class="search-menu-body">
         <div class="search-menu-copy">
           <h3>${itemName}</h3>
-          ${showRating ? `
-            <div class="rating-row search-rating-row">
-              <span class="rating-star">&#9733;</span>
-              <strong>${item.rating}</strong>
-              <span>(${item.reviews})</span>
-            </div>
-          ` : ""}
         </div>
         <div class="search-menu-footer">
           <span class="search-price">${item.priceType === 'hot_ice' ? `Mulai ${formatRupiah(Math.min(item.priceHot, item.priceIce))}` : formatRupiah(item.price)}</span>
@@ -130,6 +154,9 @@ function createSearchCard(item) {
   `;
 }
 
+/**
+ * Merender daftar menu hasil pencarian ke layar.
+ */
 function renderSearchMenu() {
   const resultCount = document.getElementById("resultCount");
   const list = document.getElementById("searchMenuList");
@@ -144,6 +171,9 @@ function renderSearchMenu() {
     : `<article class="search-menu-card empty-search-card"><div class="search-menu-body"><div class="search-menu-copy"><h3>Menu tidak ditemukan</h3><p>Coba gunakan kata kunci lain atau pilih kategori yang berbeda.</p></div></div></article>`;
 }
 
+/**
+ * Menghubungkan input pencarian dengan fungsi penyaring agar pencarian berjalan otomatis saat mengetik.
+ */
 function bindSearchInput() {
   const searchInput = document.getElementById("menuSearch");
   const searchWrapper = document.querySelector("[data-search-focus]");
@@ -159,12 +189,19 @@ function bindSearchInput() {
   });
 }
 
+/**
+ * Membaca ID menu dari parameter URL (misal: menu.html?id=2)
+ * dan mencocokkannya dengan data menu katalog.
+ */
 function getSelectedMenuItem() {
   const params = new URLSearchParams(window.location.search);
   const menuId = Number(params.get("id"));
   return currentMenuItems.find((item) => item.id === menuId) || currentMenuItems[0];
 }
 
+/**
+ * Menghitung harga total untuk item di detail page (Harga x Quantity).
+ */
 function getDetailPrice(item) {
   if (item.priceType === 'hot_ice') {
     if (detailState.size === 'Hot') return item.priceHot * detailState.quantity;
@@ -174,6 +211,9 @@ function getDetailPrice(item) {
   return item.price * detailState.quantity;
 }
 
+/**
+ * Merender halaman detail menu (Gambar besar, deskripsi lengkap, pilihan Hot/Ice, tombol tambah keranjang).
+ */
 function renderDetailPage() {
   const container = document.getElementById("detailPageContent");
   if (!container) {
@@ -196,7 +236,6 @@ function renderDetailPage() {
   const itemImage = escapeAttribute(item.image);
   const itemName = escapeHTML(item.name);
   const itemDescription = escapeHTML(item.description);
-  const showRating = shouldShowProductRating(item);
 
   let priceText = '';
   if (item.priceType === 'hot_ice') {
@@ -212,6 +251,7 @@ function renderDetailPage() {
   }
 
   let optionsPanelHtml = '';
+  // Jika menu memiliki tipe harga varian (hot_ice), buat tombol pilihan Hot / Ice
   if (item.priceType === 'hot_ice') {
     optionsPanelHtml += `
       <div class="detail-option-group">
@@ -252,13 +292,6 @@ function renderDetailPage() {
 
     <section class="detail-panel">
       <h2>${itemName}</h2>
-      ${showRating ? `
-        <div class="rating-row detail-rating-row">
-          <span class="rating-star">&#9733;</span>
-          <strong>${item.rating}</strong>
-          <span>(${item.reviews} penilaian)</span>
-        </div>
-      ` : ""}
       <p class="detail-description">${itemDescription}</p>
       <div class="detail-price-box" id="detailPriceBox">${priceText}</div>
     </section>
@@ -274,10 +307,14 @@ function renderDetailPage() {
     </section>
   `;
 
-  bindDetailActions(item);
+  bindDetailActions(item); // Hubungkan tombol tambah/kurang kuantiti dan tambah keranjang
   updateCartBadge();
 }
 
+/**
+ * Memperbarui teks harga dinamis di dalam tombol "Tambah ke Keranjang"
+ * saat quantity bertambah/berkurang atau varian suhu dipilih.
+ */
 function refreshDetailActionPrice(item) {
   const button = document.getElementById("addToCartButton");
   const quantityValue = document.getElementById("quantityValue");
@@ -312,7 +349,12 @@ function refreshDetailActionPrice(item) {
   `;
 }
 
+/**
+ * Menghubungkan fungsi aksi (klik varian Hot/Ice, tambah kuantiti, kurangi kuantiti, tambah keranjang)
+ * ke element HTML di detail page.
+ */
 function bindDetailActions(item) {
+  // Pilihan varian Hot / Ice
   document.querySelectorAll("[data-size]").forEach((button) => {
     button.addEventListener("click", () => {
       detailState.size = button.dataset.size;
@@ -323,17 +365,21 @@ function bindDetailActions(item) {
     });
   });
 
+  // Tombol kurangi porsi pesanan
   document.getElementById("decreaseQty")?.addEventListener("click", () => {
     detailState.quantity = Math.max(1, detailState.quantity - 1);
     refreshDetailActionPrice(item);
   });
 
+  // Tombol tambahkan porsi pesanan
   document.getElementById("increaseQty")?.addEventListener("click", () => {
     detailState.quantity += 1;
     refreshDetailActionPrice(item);
   });
 
+  // Tombol klik Tambah ke Keranjang
   document.getElementById("addToCartButton")?.addEventListener("click", () => {
+    // Validasi: Varian Hot/Ice harus dipilih jika menu bertipe hot_ice
     if (item.priceType === 'hot_ice' && !detailState.size) {
       showToastMessage({
         stackId: "detailToastStack",
@@ -350,6 +396,7 @@ function bindDetailActions(item) {
       ? (detailState.size === 'Hot' ? item.priceHot : item.priceIce)
       : item.price;
 
+    // Masukkan data pesanan ke array keranjang
     cartItems.push({
       id: item.id,
       name: item.name,
@@ -360,19 +407,21 @@ function bindDetailActions(item) {
       note,
     });
 
+    // Simpan data keranjang belanja ke localStorage browser agar tidak hilang saat refresh
     saveCartItems(cartItems);
     updateCartBadge();
     showDetailToast("Berhasil ditambahkan ke keranjang!");
   });
 }
 
+/**
+ * Mengubah data API database ke bentuk camelCase frontend.
+ */
 function mapApiMenuItem(item) {
   return {
     id: Number(item.id),
     name: item.name,
     category: item.categoryName || "Lainnya",
-    rating: Number(item.rating || 0),
-    reviews: Number(item.reviewsCount || 0),
     price: Number(item.price || 0),
     priceType: item.priceType || 'single',
     priceHot: Number(item.priceHot || 0),
@@ -380,12 +429,14 @@ function mapApiMenuItem(item) {
     oldPrice: 0,
     badge: Boolean(Number(item.available) || item.available) ? "" : "Habis",
     promo: "",
-    popularity: Number(item.popularityScore || 0),
     description: item.description || "",
     image: item.imageUrl || "",
   };
 }
 
+/**
+ * INISIALISASI HALAMAN
+ */
 async function initMenuPage() {
   try {
     const catalog = await fetchMenuCatalog();
@@ -394,6 +445,7 @@ async function initMenuPage() {
     currentMenuItems = [];
   }
 
+  // Jika element pencarian terdeteksi di HTML, aktifkan pencarian menu
   if (document.getElementById("menuSearch")) {
     renderSearchCategories();
     renderSearchMenu();
@@ -401,8 +453,11 @@ async function initMenuPage() {
     updateCartBadge();
   }
 
+  // Jika element detail page terdeteksi di HTML, aktifkan halaman detail menu
   if (document.getElementById("detailPageContent")) {
     renderDetailPage();
   }
 }
+
+// Jalankan inisialisasi halaman
 initMenuPage();

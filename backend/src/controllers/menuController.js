@@ -1,3 +1,13 @@
+/**
+ * BACKEND CONTROLLER: menuController.js
+ * -------------------------------------------------------------
+ * Tugas utama:
+ * 1. Mengatur logika bisnis untuk data Menu (CRUD: Create, Read, Update, Delete).
+ * 2. Berkomunikasi dengan database PostgreSQL melalui koneksi Pool.
+ * 3. Memvalidasi input dari admin sebelum disimpan ke database.
+ * 4. Mengelola penyimpanan gambar menu (upload dan hapus).
+ */
+
 const { getPool, query } = require("../config/db");
 const { saveImageValue, deleteManagedFile } = require("../utils/uploadStorage");
 const {
@@ -9,6 +19,13 @@ const {
   badRequest,
 } = require("../utils/validation");
 
+/**
+ * READ: Mengambil semua daftar menu dari database
+ * Alur Kerja:
+ * - Menjalankan perintah SQL SELECT dengan melakukan LEFT JOIN ke tabel 'categories'
+ *   agar nama kategori menu ikut terbawa.
+ * - Mengembalikan respon JSON berisi array data menu ke frontend.
+ */
 async function getMenus(request, response) {
   const menus = await query(
     `SELECT
@@ -21,9 +38,6 @@ async function getMenus(request, response) {
         m.price_ice AS "priceIce",
         m.available,
         m.image_url AS imageUrl,
-        m.rating,
-        m.reviews_count AS reviewsCount,
-        m.popularity_score AS popularityScore,
         m.is_popular AS isPopular,
         c.id AS categoryId,
         c.name AS categoryName
@@ -38,6 +52,17 @@ async function getMenus(request, response) {
   });
 }
 
+/**
+ * CREATE: Membuat / menambahkan menu baru (hanya diakses oleh Admin)
+ * Alur Kerja:
+ * 1. Menerima data JSON dari request.body (name, price, image, dll.).
+ * 2. Memvalidasi tipe data (kategori harus integer positif, nama tidak boleh kosong, dll.).
+ * 3. Menyesuaikan logika harga:
+ *    - Jika tipe harga 'hot_ice' -> wajib menyertakan priceHot dan priceIce.
+ *    - Jika tipe harga 'single' -> wajib menyertakan price.
+ * 4. Menyimpan file gambar menu yang diunggah ke storage Cloud Supabase.
+ * 5. Menjalankan perintah SQL INSERT INTO menus untuk menyimpan data baru.
+ */
 async function createMenu(request, response) {
   const {
     categoryId,
@@ -51,11 +76,14 @@ async function createMenu(request, response) {
     available = true,
     isPopular = false,
   } = request.body || {};
+
+  // Validasi input wajib menggunakan helper validation
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
   const normalizedPriceType = requireNonEmptyString(priceType, "Tipe harga wajib diisi.", { maxLength: 30 });
 
+  // Hanya boleh tipe 'single' atau 'hot_ice'
   if (!["single", "hot_ice"].includes(normalizedPriceType)) {
     throw badRequest("Tipe harga tidak valid.");
   }
@@ -64,6 +92,7 @@ async function createMenu(request, response) {
   let normalizedPriceHot = null;
   let normalizedPriceIce = null;
 
+  // Sesuaikan input harga berdasarkan tipe harga terpilih
   if (normalizedPriceType === "hot_ice") {
     normalizedPriceHot = requireNonNegativeNumber(priceHot, "Harga Hot tidak valid.");
     normalizedPriceIce = requireNonNegativeNumber(priceIce, "Harga Ice tidak valid.");
@@ -74,8 +103,10 @@ async function createMenu(request, response) {
   const normalizedAvailable = normalizeBoolean(available);
   const normalizedIsPopular = normalizeBoolean(isPopular);
 
+  // Unggah gambar ke Supabase Storage (atau server lokal jika offline)
   const storedImageUrl = await saveImageValue(imageUrl, "menus");
 
+  // Masukkan data baru ke database PostgreSQL
   const [result] = await getPool().execute(
     `INSERT INTO menus (
         category_id,
@@ -106,11 +137,20 @@ async function createMenu(request, response) {
   response.status(201).json({
     success: true,
     data: {
-      id: result.insertId,
+      id: result.insertId, // Mengembalikan ID menu yang baru saja terbuat
     },
   });
 }
 
+/**
+ * UPDATE: Mengubah data menu yang sudah ada (hanya diakses oleh Admin)
+ * Alur Kerja:
+ * 1. Mendapatkan ID menu dari parameter URL (req.params.id).
+ * 2. Memeriksa apakah data menu tersebut memang ada di database.
+ * 3. Memvalidasi seluruh input perubahan.
+ * 4. Jika ada gambar baru yang diunggah, simpan gambar baru tersebut dan hapus file gambar lama dari storage.
+ * 5. Menjalankan perintah SQL UPDATE untuk memperbarui baris menu.
+ */
 async function updateMenu(request, response) {
   const menuId = requirePositiveInteger(request.params.id, "ID menu tidak valid.");
   const {
@@ -125,12 +165,13 @@ async function updateMenu(request, response) {
     available = true,
     isPopular = false,
   } = request.body || {};
+
   const normalizedCategoryId = requirePositiveInteger(categoryId, "Kategori wajib dipilih.");
   const normalizedName = requireNonEmptyString(name, "Nama menu wajib diisi.", { maxLength: 120 });
   const normalizedDescription = optionalTrimmedString(description);
-  const normalizedPriceType = requireNonEmptyString(priceType, "Tipe harga wajib diisi.", { maxLength: 30 });
+  const normalizedLinkPriceType = requireNonEmptyString(priceType, "Tipe harga wajib diisi.", { maxLength: 30 });
 
-  if (!["single", "hot_ice"].includes(normalizedPriceType)) {
+  if (!["single", "hot_ice"].includes(normalizedLinkPriceType)) {
     throw badRequest("Tipe harga tidak valid.");
   }
 
@@ -138,7 +179,7 @@ async function updateMenu(request, response) {
   let normalizedPriceHot = null;
   let normalizedPriceIce = null;
 
-  if (normalizedPriceType === "hot_ice") {
+  if (normalizedLinkPriceType === "hot_ice") {
     normalizedPriceHot = requireNonNegativeNumber(priceHot, "Harga Hot tidak valid.");
     normalizedPriceIce = requireNonNegativeNumber(priceIce, "Harga Ice tidak valid.");
   } else {
@@ -148,6 +189,7 @@ async function updateMenu(request, response) {
   const normalizedAvailable = normalizeBoolean(available);
   const normalizedIsPopular = normalizeBoolean(isPopular);
 
+  // 1. Cek keberadaan menu lama di database
   const existingMenus = await query(
     `SELECT id, image_url AS imageUrl
      FROM menus
@@ -165,12 +207,14 @@ async function updateMenu(request, response) {
     });
   }
 
+  // 2. Simpan gambar baru, dan otomatis hapus gambar lama dari cloud/storage
   const storedImageUrl = await saveImageValue(
     imageUrl,
     "menus",
     existingMenu.imageUrl || ""
   );
 
+  // 3. Jalankan perintah pembaruan database
   await getPool().execute(
     `UPDATE menus
      SET
@@ -189,7 +233,7 @@ async function updateMenu(request, response) {
       normalizedCategoryId,
       normalizedName,
       normalizedDescription || null,
-      normalizedPriceType,
+      normalizedLinkPriceType,
       normalizedPrice,
       normalizedPriceHot,
       normalizedPriceIce,
@@ -208,9 +252,18 @@ async function updateMenu(request, response) {
   });
 }
 
+/**
+ * DELETE: Menghapus menu dari database (hanya diakses oleh Admin)
+ * Alur Kerja:
+ * 1. Mendapatkan ID menu dari parameter URL.
+ * 2. Cek keberadaan menu dan ambil URL gambarnya.
+ * 3. Hapus baris menu dari tabel database menggunakan perintah SQL DELETE.
+ * 4. Hapus file gambar menu dari storage cloud agar tidak memakan ruang penyimpanan (storage leak).
+ */
 async function deleteMenu(request, response) {
   const menuId = requirePositiveInteger(request.params.id, "ID menu tidak valid.");
 
+  // Cek keberadaan menu
   const existingMenus = await query(
     `SELECT image_url AS imageUrl
      FROM menus
@@ -228,11 +281,13 @@ async function deleteMenu(request, response) {
     });
   }
 
+  // Hapus data dari tabel
   await getPool().execute(
     `DELETE FROM menus WHERE id = ?`,
     [menuId]
   );
 
+  // Hapus file gambar dari cloud storage
   await deleteManagedFile(existingMenu.imageUrl || "");
 
   response.json({
